@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://d0a7j6u6vbqtx"]
+
+[ext_resource type="Script" path="res://scripts/atomic_zombie.gd" id="1_atomic_zombie_script"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_zombie_body"]
+radius = 29.0
+height = 134.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_zombie_touch"]
+radius = 30.0
+height = 138.0
+
+[node name="AtomicZombie" type="CharacterBody2D" unique_id=1256919518]
+collision_layer = 2
+script = ExtResource("1_atomic_zombie_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=465394602]
+position = Vector2(0, 6)
+shape = SubResource("CapsuleShape2D_zombie_body")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1368660626]
+position = Vector2(0, 14)
+animation = &""
+
+[node name="TouchArea" type="Area2D" parent="." unique_id=1952500082]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TouchArea" unique_id=525973206]
+position = Vector2(0, 6)
+shape = SubResource("CapsuleShape2D_zombie_touch")

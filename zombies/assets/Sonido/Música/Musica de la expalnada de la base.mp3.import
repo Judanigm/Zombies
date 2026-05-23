@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bkonb2s67xywm"
+path="res://.godot/imported/Musica de la expalnada de la base.mp3-38c5ea406f6e206f8e1da6707c41cbdd.mp3str"
+
+[deps]
+
+source_file="res://assets/Sonido/Música/Musica de la expalnada de la base.mp3"
+dest_files=["res://.godot/imported/Musica de la expalnada de la base.mp3-38c5ea406f6e206f8e1da6707c41cbdd.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

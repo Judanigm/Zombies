@@ -1,0 +1,29 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/zombie_michael_jackson.gd" id="1_mj_script"]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mj_body"]
+radius = 29.0
+height = 134.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mj_touch"]
+radius = 30.0
+height = 138.0
+
+[node name="Zombie Michael Jackson" type="CharacterBody2D"]
+collision_layer = 2
+script = ExtResource("1_mj_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 6)
+shape = SubResource("CapsuleShape2D_mj_body")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 14)
+animation = &""
+
+[node name="TouchArea" type="Area2D" parent="."]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TouchArea"]
+position = Vector2(0, 6)
+shape = SubResource("CapsuleShape2D_mj_touch")

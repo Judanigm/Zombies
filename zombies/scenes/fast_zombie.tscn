@@ -1,0 +1,221 @@
+[gd_scene format=3 uid="uid://btwut4tgkx4nc"]
+
+[ext_resource type="Script" uid="uid://dvydna3l85yhs" path="res://scripts/fast_zombie.gd" id="1_fast_zombie_script"]
+[ext_resource type="Texture2D" uid="uid://cnfp4s1rqfu0y" path="res://assets/Zombies/Fast/Dead.png" id="2_dead_texture"]
+[ext_resource type="Texture2D" uid="uid://usqqbjxy3tp8" path="res://assets/Zombies/Fast/Andar abajo.png" id="3_walk_down_texture"]
+[ext_resource type="Texture2D" uid="uid://b18n16vi1v7w1" path="res://assets/Zombies/Fast/Andar arriba.png" id="4_walk_up_texture"]
+[ext_resource type="Texture2D" uid="uid://tp1ycgvm4gtb" path="res://assets/Zombies/Fast/Andar izquierda.png" id="5_walk_left_texture"]
+[ext_resource type="Texture2D" uid="uid://u4yaqg2ir07l" path="res://assets/Zombies/Fast/Andar derecha.png" id="6_walk_right_texture"]
+[ext_resource type="Texture2D" uid="uid://cosjxthwjlyy5" path="res://assets/Zombies/Fast/Spawn.png" id="7_spawn_texture"]
+[ext_resource type="Texture2D" uid="uid://cqhyw2vevhcbe" path="res://assets/Zombies/Fast/Particulas electricas.png" id="8_electric_particles_texture"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fast_zombie_body"]
+radius = 29.0
+height = 134.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_down_0"]
+atlas = ExtResource("3_walk_down_texture")
+region = Rect2(0, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_down_1"]
+atlas = ExtResource("3_walk_down_texture")
+region = Rect2(447, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_down_2"]
+atlas = ExtResource("3_walk_down_texture")
+region = Rect2(894, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_down_3"]
+atlas = ExtResource("3_walk_down_texture")
+region = Rect2(1341, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_up_0"]
+atlas = ExtResource("4_walk_up_texture")
+region = Rect2(0, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_up_1"]
+atlas = ExtResource("4_walk_up_texture")
+region = Rect2(447, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_up_2"]
+atlas = ExtResource("4_walk_up_texture")
+region = Rect2(894, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_up_3"]
+atlas = ExtResource("4_walk_up_texture")
+region = Rect2(1341, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_right_0"]
+atlas = ExtResource("6_walk_right_texture")
+region = Rect2(0, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_right_1"]
+atlas = ExtResource("6_walk_right_texture")
+region = Rect2(447, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_right_2"]
+atlas = ExtResource("6_walk_right_texture")
+region = Rect2(894, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_right_3"]
+atlas = ExtResource("6_walk_right_texture")
+region = Rect2(1341, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_left_0"]
+atlas = ExtResource("5_walk_left_texture")
+region = Rect2(0, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_left_1"]
+atlas = ExtResource("5_walk_left_texture")
+region = Rect2(447, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_left_2"]
+atlas = ExtResource("5_walk_left_texture")
+region = Rect2(894, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_walk_left_3"]
+atlas = ExtResource("5_walk_left_texture")
+region = Rect2(1341, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dead"]
+atlas = ExtResource("2_dead_texture")
+region = Rect2(0, 0, 303, 407)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spawn"]
+atlas = ExtResource("7_spawn_texture")
+region = Rect2(0, 0, 1054, 728)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_fast_zombie"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_down_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_down_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_down_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_down_3")
+}],
+"loop": true,
+"name": &"Andar abj",
+"speed": 13.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_up_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_up_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_up_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_up_3")
+}],
+"loop": true,
+"name": &"Andar arr",
+"speed": 13.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_right_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_right_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_right_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_right_3")
+}],
+"loop": true,
+"name": &"Andar der",
+"speed": 13.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_left_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_left_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_left_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_walk_left_3")
+}],
+"loop": true,
+"name": &"Andar izq",
+"speed": 13.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dead")
+}],
+"loop": false,
+"name": &"Dead",
+"speed": 13.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spawn")
+}],
+"loop": false,
+"name": &"Spawn",
+"speed": 13.0
+}]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_fast_zombie"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 18.0
+initial_velocity_min = 6.0
+initial_velocity_max = 18.0
+gravity = Vector3(0, -10, 0)
+scale_min = 0.08
+scale_max = 0.16
+color = Color(0.596078, 0.968627, 1, 0.8)
+hue_variation_max = 0.08
+anim_speed_min = 1.0
+anim_speed_max = 1.0
+anim_offset_max = 1.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fast_zombie_touch"]
+radius = 30.0
+height = 138.0
+
+[node name="FastZombie" type="CharacterBody2D" unique_id=1489439641]
+collision_layer = 2
+script = ExtResource("1_fast_zombie_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1817387341]
+position = Vector2(0, 6)
+shape = SubResource("CapsuleShape2D_fast_zombie_body")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=835273140]
+position = Vector2(0, 14)
+scale = Vector2(0.28, 0.28)
+animation = &""
+
+[node name="ElectricParticles" type="GPUParticles2D" parent="." unique_id=456728103]
+position = Vector2(0, -10)
+amount = 10
+texture = ExtResource("8_electric_particles_texture")
+lifetime = 0.45
+preprocess = 0.45
+speed_scale = 1.2
+process_material = SubResource("ParticleProcessMaterial_fast_zombie")
+
+[node name="TouchArea" type="Area2D" parent="." unique_id=814012708]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TouchArea" unique_id=2137141960]
+position = Vector2(0, 6)
+shape = SubResource("CapsuleShape2D_fast_zombie_touch")

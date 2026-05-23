@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dce26b3p1c0hf"
+path="res://.godot/imported/Sonido zombie.mp3-936675fde84fd05a1f0c69cfe0cf2bb9.mp3str"
+
+[deps]
+
+source_file="res://assets/Sonido/Efectos/Sonido zombie.mp3"
+dest_files=["res://.godot/imported/Sonido zombie.mp3-936675fde84fd05a1f0c69cfe0cf2bb9.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

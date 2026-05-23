@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bpu7mucam7e0k"
+path="res://.godot/imported/Xbox sonido logro inusual [VFQ27MdSyFU].mp3-4544f82372d5786789c1ee49d5dd4dd6.mp3str"
+
+[deps]
+
+source_file="res://assets/Sonido/Efectos/Xbox sonido logro inusual [VFQ27MdSyFU].mp3"
+dest_files=["res://.godot/imported/Xbox sonido logro inusual [VFQ27MdSyFU].mp3-4544f82372d5786789c1ee49d5dd4dd6.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

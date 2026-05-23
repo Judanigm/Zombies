@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c7xfii18bdwsn"
+path="res://.godot/imported/Enderman's Teleport - Sound Effect.mp3-23c9e1e6b07588a55a876af87871406b.mp3str"
+
+[deps]
+
+source_file="res://assets/Sonido/Efectos/Enderman's Teleport - Sound Effect.mp3"
+dest_files=["res://.godot/imported/Enderman's Teleport - Sound Effect.mp3-23c9e1e6b07588a55a876af87871406b.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

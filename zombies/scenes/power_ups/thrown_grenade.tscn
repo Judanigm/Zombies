@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/thrown_grenade.gd" id="1_thrown_grenade_script"]
+[ext_resource type="Texture2D" path="res://assets/Power ups/Granada/Granada.png" id="2_grenade_texture"]
+
+[node name="ThrownGrenade" type="Node2D"]
+z_index = 4
+script = ExtResource("1_thrown_grenade_script")
+
+[node name="Shadow" type="Polygon2D" parent="."]
+position = Vector2(0, 8)
+color = Color(0, 0, 0, 0.2)
+polygon = PackedVector2Array(-16, 0, -12, -4, -6, -6, 6, -6, 12, -4, 16, 0, 12, 4, 6, 6, -6, 6, -12, 4)
+
+[node name="VisualRoot" type="Node2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="VisualRoot"]
+scale = Vector2(0.09, 0.09)
+texture = ExtResource("2_grenade_texture")

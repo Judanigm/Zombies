@@ -1,0 +1,128 @@
+[gd_scene format=3 uid="uid://c2pbplakluruj"]
+
+[ext_resource type="Script" uid="uid://kfmvkkhhoyx7" path="res://scripts/miner_zombie.gd" id="1_miner_zombie_script"]
+[ext_resource type="Texture2D" uid="uid://c0eund8iju6n8" path="res://assets/Zombies/Minero/Die.png" id="2_le155"]
+[ext_resource type="Texture2D" uid="uid://behlpya7j1y62" path="res://assets/Zombies/Minero/Enterrarse.png" id="3_nl1u5"]
+[ext_resource type="Texture2D" uid="uid://dkt1kom1s0ncu" path="res://assets/Zombies/Minero/Mareado.png" id="4_6mq5j"]
+[ext_resource type="Texture2D" uid="uid://mcusi1ron8q8" path="res://assets/Zombies/Minero/Spawn.png" id="5_fssn8"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_miner_zombie_body"]
+radius = 29.0
+height = 134.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rk2tx"]
+atlas = ExtResource("2_le155")
+region = Rect2(0, 0, 457, 279)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vgddg"]
+atlas = ExtResource("3_nl1u5")
+region = Rect2(0, 0, 437, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dtj05"]
+atlas = ExtResource("3_nl1u5")
+region = Rect2(437, 0, 437, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5wqy1"]
+atlas = ExtResource("3_nl1u5")
+region = Rect2(874, 0, 437, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_twkx0"]
+atlas = ExtResource("3_nl1u5")
+region = Rect2(1311, 0, 437, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q6i02"]
+atlas = ExtResource("3_nl1u5")
+region = Rect2(1748, 0, 437, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3ytdt"]
+atlas = ExtResource("3_nl1u5")
+region = Rect2(2185, 0, 437, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fa2dy"]
+atlas = ExtResource("4_6mq5j")
+region = Rect2(0, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cfgu5"]
+atlas = ExtResource("4_6mq5j")
+region = Rect2(447, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b6b40"]
+atlas = ExtResource("5_fssn8")
+region = Rect2(0, 0, 1054, 728)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_it6m1"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rk2tx")
+}],
+"loop": true,
+"name": &"Died",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vgddg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dtj05")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5wqy1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_twkx0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q6i02")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3ytdt")
+}],
+"loop": true,
+"name": &"Enterrarse",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fa2dy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cfgu5")
+}],
+"loop": true,
+"name": &"Mareado",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_b6b40")
+}],
+"loop": true,
+"name": &"Spawn",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_miner_zombie_touch"]
+radius = 30.0
+height = 138.0
+
+[node name="MinerZombie" type="CharacterBody2D" unique_id=1317951228]
+collision_layer = 2
+script = ExtResource("1_miner_zombie_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1248949178]
+position = Vector2(0, 6)
+shape = SubResource("CapsuleShape2D_miner_zombie_body")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=126505930]
+position = Vector2(0, 14)
+sprite_frames = SubResource("SpriteFrames_it6m1")
+animation = &"Died"
+
+[node name="TouchArea" type="Area2D" parent="." unique_id=843588968]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TouchArea" unique_id=1634462485]
+position = Vector2(0, 6)
+shape = SubResource("CapsuleShape2D_miner_zombie_touch")

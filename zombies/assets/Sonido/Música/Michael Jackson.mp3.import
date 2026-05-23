@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bp6eo1ex7vhr1"
+path="res://.godot/imported/Michael Jackson.mp3-cc55a2e985cbc7cee6f638c5e9c80a69.mp3str"
+
+[deps]
+
+source_file="res://assets/Sonido/Música/Michael Jackson.mp3"
+dest_files=["res://.godot/imported/Michael Jackson.mp3-cc55a2e985cbc7cee6f638c5e9c80a69.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

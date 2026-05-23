@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/triple_bullet_power_up.gd" id="1_power_up_script"]
+[ext_resource type="Texture2D" path="res://assets/Power ups/Bala triple/Cartucho.png" id="2_power_up_texture"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_power_up"]
+radius = 26.0
+
+[node name="PowerUp" type="Area2D"]
+collision_layer = 0
+collision_mask = 1
+monitorable = false
+script = ExtResource("1_power_up_script")
+power_up_id = &"triple_bullet"
+display_name = "Bala Triple"
+bob_height = 7.0
+tilt_degrees = 4.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 4)
+shape = SubResource("CircleShape2D_power_up")
+
+[node name="Shadow" type="Polygon2D" parent="."]
+position = Vector2(0, 24)
+color = Color(0, 0, 0, 0.18)
+polygon = PackedVector2Array(-26, 0, -22, -6, -10, -10, 10, -10, 22, -6, 26, 0, 22, 6, 10, 10, -10, 10, -22, 6)
+
+[node name="VisualRoot" type="Node2D" parent="."]
+position = Vector2(0, -6)
+
+[node name="Sprite2D" type="Sprite2D" parent="VisualRoot"]
+scale = Vector2(0.11, 0.11)
+texture = ExtResource("2_power_up_texture")
