@@ -1,18 +1,10 @@
-extends CharacterBody2D
+extends Zombie
 
-signal died
+## Miner zombie: burrows underground, relocates near the player, then surfaces
+## dizzy and vulnerable for a short window before burrowing again.
 
-@export_range(0.1, 2.0, 0.01) var sprite_scale: float = 0.3
-@export_range(0.1, 2.0, 0.01) var spawn_sprite_scale: float = 0.24
-@export var sprite_offset: Vector2 = Vector2(0, 14)
 @export var burrow_sprite_scale: float = 0.3
 @export var burrow_sprite_offset: Vector2 = Vector2(0, 14)
-@export var dead_sprite_scale: float = 0.34
-@export var dead_sprite_offset: Vector2 = Vector2(0, 20)
-@export var corpse_duration: float = 0.95
-@export var spawn_duration: float = 1.8
-@export var spawn_shake_distance: float = 12.0
-@export var spawn_shake_speed: float = 32.0
 @export var burrow_hidden_duration: float = 2.0
 @export var dizzy_duration: float = 3.0
 @export var relocation_area: Rect2 = Rect2(-1320, -980, 2640, 1960)
@@ -26,15 +18,10 @@ signal died
 @export var below_player_max_vertical_offset: float = 320.0
 @export var below_player_horizontal_offset: float = 120.0
 @export_range(0.0, 1.0, 0.01) var one_shot_probability: float = 0.5
-@export_range(0.0, 1.0, 0.01) var zombie_sound_chance: float = 0.18
-@export var zombie_sound_volume_db: float = 20.0
-@export var zombie_sound_check_interval: float = 2.5
 
-const DEAD_ANIMATION := &"Dead"
 const BURROW_ANIMATION := &"Enterrarse"
 const REAPPEAR_ANIMATION := &"Salir"
 const DIZZY_ANIMATION := &"Mareado"
-const SPAWN_ANIMATION := &"Spawn"
 const DEAD_FRAME_SIZE := Vector2(457, 279)
 const DIZZY_FRAME_SIZE := Vector2(447, 608)
 const DIZZY_FRAME_COUNT := 2
@@ -51,49 +38,34 @@ const DEAD_TEXTURE := preload("res://assets/Zombies/Minero/Die.png")
 const DIZZY_TEXTURE := preload("res://assets/Zombies/Minero/Mareado.png")
 const BURROW_TEXTURE := preload("res://assets/Zombies/Minero/Enterrarse.png")
 const SPAWN_TEXTURE := preload("res://assets/Zombies/Minero/Spawn.png")
-const ZOMBIE_SOUND := preload("res://assets/Sonido/Efectos/Sonido zombie.mp3")
 
-static var sprite_frames_cache: SpriteFrames
-
-@onready var body_collision: CollisionShape2D = $CollisionShape2D
-@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
-@onready var touch_area: Area2D = $TouchArea
-@onready var touch_collision: CollisionShape2D = $TouchArea/CollisionShape2D
-
-var player: Node2D = null
-var is_dead: bool = false
-var is_spawning: bool = true
 var is_burrowing: bool = false
 var is_hidden: bool = false
 var is_reappearing: bool = false
 var is_dizzy: bool = false
-var corpse_timer: float = 0.0
-var spawn_timer: float = 0.0
 var hidden_timer: float = 0.0
 var dizzy_timer: float = 0.0
-var current_health: int = 0
-var zombie_sound_player: AudioStreamPlayer2D = null
-var zombie_sound_timer: float = 0.0
 
 
-func _ready() -> void:
-	add_to_group("zombies")
-	_ensure_sprite_frames()
-	_setup_zombie_sound()
-	touch_area.body_entered.connect(_on_touch_area_body_entered)
+func _init() -> void:
+	sprite_scale = 0.3
+	spawn_sprite_scale = 0.24
+	dead_sprite_scale = 0.34
+	dead_sprite_offset = Vector2(0, 20)
+	corpse_duration = 0.95
+	spawn_duration = 1.8
+
+
+func get_zombie_type() -> StringName:
+	return TYPE_MINER
+
+
+func _on_ready() -> void:
 	animated_sprite.animation_finished.connect(_on_animated_sprite_animation_finished)
-	animated_sprite.rotation = 0.0
-	player = get_tree().get_first_node_in_group("player") as Node2D
 	current_health = 1 if randf() < one_shot_probability else 2
-	spawn_timer = spawn_duration
-	zombie_sound_timer = zombie_sound_check_interval
 	_disable_interactions()
 	animated_sprite.visible = true
 	animated_sprite.flip_h = false
-	animated_sprite.play(SPAWN_ANIMATION)
-	animated_sprite.stop()
-	animated_sprite.frame = 0
-	_update_visuals()
 
 
 func _physics_process(delta: float) -> void:
@@ -131,10 +103,7 @@ func _physics_process(delta: float) -> void:
 
 	if is_dizzy:
 		dizzy_timer = maxf(dizzy_timer - delta, 0.0)
-		zombie_sound_timer = maxf(zombie_sound_timer - delta, 0.0)
-		if zombie_sound_timer == 0.0:
-			_try_play_zombie_sound()
-			zombie_sound_timer = zombie_sound_check_interval
+		_update_sound_timer(delta)
 		if animated_sprite.animation != DIZZY_ANIMATION:
 			animated_sprite.play(DIZZY_ANIMATION)
 		elif not animated_sprite.is_playing():
@@ -150,13 +119,8 @@ func _on_touch_area_body_entered(body: Node) -> void:
 		body.die()
 
 
-func take_damage(amount: int = 1) -> void:
-	if is_dead or is_spawning or is_hidden or is_burrowing or is_reappearing:
-		return
-
-	current_health = maxi(current_health - amount, 0)
-	if current_health == 0:
-		die()
+func _can_take_damage() -> bool:
+	return not (is_hidden or is_burrowing or is_reappearing)
 
 
 func die() -> void:
@@ -182,10 +146,6 @@ func die() -> void:
 	_update_visuals()
 
 
-func get_zombie_type() -> StringName:
-	return &"miner"
-
-
 func _update_visuals() -> void:
 	var current_scale := sprite_scale
 	var current_offset := sprite_offset
@@ -202,17 +162,6 @@ func _update_visuals() -> void:
 
 	animated_sprite.scale = Vector2.ONE * current_scale
 	animated_sprite.position = current_offset
-
-
-func _get_spawn_shake_offset() -> Vector2:
-	if not is_spawning:
-		return Vector2.ZERO
-
-	var shake_phase := (spawn_duration - spawn_timer) * spawn_shake_speed
-	return Vector2(
-		sin(shake_phase * 1.3) * spawn_shake_distance,
-		absf(sin(shake_phase * 0.9)) * -spawn_shake_distance * 0.35
-	)
 
 
 func _finish_spawn() -> void:
@@ -345,37 +294,23 @@ func _can_harm_player() -> bool:
 	return is_dizzy and not is_dead and not is_spawning and not is_burrowing and not is_hidden and not is_reappearing
 
 
-func _setup_zombie_sound() -> void:
-	zombie_sound_player = AudioStreamPlayer2D.new()
-	zombie_sound_player.stream = ZOMBIE_SOUND
-	zombie_sound_player.volume_db = zombie_sound_volume_db
-	add_child(zombie_sound_player)
-
-
-func _try_play_zombie_sound() -> void:
-	if zombie_sound_player == null:
+func _on_animated_sprite_animation_finished() -> void:
+	if is_dead:
 		return
-	if randf() > zombie_sound_chance:
-		return
-	zombie_sound_player.play()
+	if is_burrowing and animated_sprite.animation == BURROW_ANIMATION:
+		_finish_burrow()
+	elif is_reappearing and animated_sprite.animation == REAPPEAR_ANIMATION:
+		_finish_reappear()
 
 
-func _ensure_sprite_frames() -> void:
-	animated_sprite.sprite_frames = _get_sprite_frames()
-
-
-static func _get_sprite_frames() -> SpriteFrames:
-	if sprite_frames_cache != null:
-		return sprite_frames_cache
-
+func _build_sprite_frames() -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	_add_single_frame_animation(frames, DEAD_ANIMATION, DEAD_TEXTURE, DEAD_FRAME_SIZE, 1.0)
 	_add_burrow_animation(frames)
 	_add_reappear_animation(frames)
 	_add_dizzy_animation(frames)
 	_add_single_frame_animation(frames, SPAWN_ANIMATION, SPAWN_TEXTURE, SPAWN_FRAME_SIZE, 6.0)
-	sprite_frames_cache = frames
-	return sprite_frames_cache
+	return frames
 
 
 static func _add_dizzy_animation(frames: SpriteFrames) -> void:
@@ -412,32 +347,3 @@ static func _add_reappear_animation(frames: SpriteFrames) -> void:
 			REAPPEAR_ANIMATION,
 			_make_atlas_texture(BURROW_TEXTURE, BURROW_FRAME_REGIONS[frame_index])
 		)
-
-
-static func _add_single_frame_animation(
-	frames: SpriteFrames,
-	animation_name: StringName,
-	texture: Texture2D,
-	frame_size: Vector2,
-	speed: float
-) -> void:
-	frames.add_animation(animation_name)
-	frames.set_animation_loop(animation_name, false)
-	frames.set_animation_speed(animation_name, speed)
-	frames.add_frame(animation_name, _make_atlas_texture(texture, Rect2(Vector2.ZERO, frame_size)))
-
-
-static func _make_atlas_texture(texture: Texture2D, region: Rect2) -> AtlasTexture:
-	var atlas_texture := AtlasTexture.new()
-	atlas_texture.atlas = texture
-	atlas_texture.region = region
-	return atlas_texture
-
-
-func _on_animated_sprite_animation_finished() -> void:
-	if is_dead:
-		return
-	if is_burrowing and animated_sprite.animation == BURROW_ANIMATION:
-		_finish_burrow()
-	elif is_reappearing and animated_sprite.animation == REAPPEAR_ANIMATION:
-		_finish_reappear()
