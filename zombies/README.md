@@ -204,6 +204,13 @@ El juego tiene un **editor de oleadas** dentro del menú:
 
 ---
 
+## 📄 Licencia
+
+Este juego es **open source** y se publica bajo la licencia **MIT**. Consulta
+[`LICENSE`](../LICENSE) para ver los términos completos.
+
+---
+
 ¿Quieres saber **cómo está hecho el juego por dentro** (para los más curiosos)?
 Échale un ojo a **`DOCUMENTACION.md`**, en esta misma carpeta. 🚀
 
