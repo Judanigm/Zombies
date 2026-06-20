@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="zombies/assets/Texto/Logo%20del%20juego.png" alt="Zombie" width="520">
+<img src="zombies/assets/Texto/Logo%20del%20juego.png" alt="Zombie" width="420">
 
 ### Survival arcade de oleadas hecho en **Godot** 🧟‍♂️🔫
 
