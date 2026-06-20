@@ -17,22 +17,9 @@
 </div>
 
 <br>
-
 <div align="center">
-
-<img src="docs/captura-principal.svg" alt="Captura de pantalla del juego" width="88%">
-
+<img width="3839" height="2159" alt="image" src="https://github.com/user-attachments/assets/8a5818b6-625a-405a-b184-141be18cf338" />
 </div>
-
-<!--
-  📸 HUECO PARA TU CAPTURA DE PANTALLA
-  Haz una captura del juego en marcha, guárdala como  docs/captura-principal.png
-  y cambia la línea de arriba por:
-      <img src="docs/captura-principal.png" alt="Captura de pantalla del juego" width="88%">
-  (puedes añadir más capturas creando una pequeña galería justo debajo).
--->
-
----
 
 ## 🧟 ¿De qué va?
 
