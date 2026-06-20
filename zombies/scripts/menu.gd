@@ -27,31 +27,7 @@ const ACHIEVEMENTS_BACKGROUND_TEXTURE := preload("res://assets/Texto/Fondo de lo
 const RECORD_TITLE_SIZE := Vector2(340, 86)
 const RECORD_DIGIT_TARGET_HEIGHT := 70.0
 const RECORD_DIGIT_SPACING := 5
-const LETTER_FONT_TEXTURE := preload("res://assets/Texto/Fuente de letras.png")
-const LETTER_FONT_COLUMNS := 13
-const LETTER_FONT_ROWS := 2
-const LETTER_FONT_CHARS := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const SPRITE_TEXT_LETTER_SPACING := -26
-const SPRITE_TEXT_DIGIT_HEIGHT_MULTIPLIER := 0.6
-const SPRITE_TEXT_DIGIT_MIN_GAP := 3.0
-const SPRITE_TEXT_DIGIT_WORD_GAP := 34.0
 const RESET_BUTTON_LETTER_SPACING := -8
-const SPRITE_TEXT_WORD_SPACING_MULTIPLIER := 0.78
-const DIGIT_TEXTURES := {
-	"0": preload("res://assets/Texto/0.png"),
-	"1": preload("res://assets/Texto/1.png"),
-	"2": preload("res://assets/Texto/2.png"),
-	"3": preload("res://assets/Texto/3.png"),
-	"4": preload("res://assets/Texto/4.png"),
-	"5": preload("res://assets/Texto/5.png"),
-	"6": preload("res://assets/Texto/6.png"),
-	"7": preload("res://assets/Texto/7.png"),
-	"8": preload("res://assets/Texto/8.png"),
-	"9": preload("res://assets/Texto/9.png"),
-}
-const GAME_MUSIC_STREAM := preload("res://assets/Sonido/Música/en el juego.mp3")
-const ACHIEVEMENTS_MUSIC_STREAM := preload("res://assets/Sonido/Música/Música de pantalla de logros.mp3")
-const BUTTON_TOUCH_SOUND_STREAM := preload("res://assets/Sonido/Música/Sonido tocar botón.mp3")
 const TUTORIAL_BUTTON_TEXTURE := preload("res://assets/Texto/Tutorial/Ir Tutorial.png")
 const TUTORIAL_PAGE_TEXTS := [
 	{
@@ -117,12 +93,10 @@ const SKIP_WAVE_BUTTON_LETTER_SPACING := -12
 @onready var wave_editor_help_label: Label = $MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer/HelpLabel
 @onready var wave_editor_apply_button: Button = $MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer/Buttons/ApplyButton
 @onready var wave_editor_close_button: Button = $MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer/Buttons/CloseButton
-@onready var death_sound: AudioStreamPlayer = $"../DeathSound"
-@onready var menu_music: AudioStreamPlayer = $"../MenuMusic"
-@onready var game_music: AudioStreamPlayer = $"../GameMusic"
 
 var is_in_main_menu := true
 var is_game_over := false
+var menu_audio: MenuAudio = null
 var menu_buttons: Array[Button] = []
 var hard_mode_button: Button = null
 var hard_mode_enabled: bool = false
@@ -131,9 +105,6 @@ var achievements_record_row: HBoxContainer = null
 var achievements_record_digits: HBoxContainer = null
 var achievements_scroll: ScrollContainer = null
 var achievements_cards_list: GridContainer = null
-var paused_music_players: Array[AudioStreamPlayer] = []
-var achievements_music: AudioStreamPlayer = null
-var button_touch_sound: AudioStreamPlayer = null
 var skip_wave_buttons_panel: PanelContainer = null
 var skip_wave_buttons_row: HBoxContainer = null
 var skip_wave_buttons: Array[Button] = []
@@ -147,23 +118,17 @@ var tutorial_page_index: int = 0
 
 const SWITCH_MENU_JOYPAD_BUTTON := JOY_BUTTON_START
 const CLICK_JOYPAD_TRIGGER_THRESHOLD := 0.5
-const DEATH_RUMBLE_WEAK := 0.65
-const DEATH_RUMBLE_STRONG := 1.0
 
 var joypad_left_trigger_click_pressed: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	death_sound.process_mode = Node.PROCESS_MODE_ALWAYS
-	menu_music.process_mode = Node.PROCESS_MODE_ALWAYS
-	game_music.process_mode = Node.PROCESS_MODE_ALWAYS
-	game_music.stream = GAME_MUSIC_STREAM
-	_setup_achievements_music()
-	_setup_button_touch_sound()
+	menu_audio = MenuAudio.new()
+	menu_audio.name = "MenuAudio"
+	menu_audio.menu = self
+	add_child(menu_audio)
+	menu_audio.setup()
 	_load_hard_mode_setting()
-	_enable_music_loop(menu_music)
-	_enable_music_loop(game_music)
-	_enable_music_loop(achievements_music)
 	_setup_hard_mode_button()
 	_setup_skip_wave_buttons()
 	_setup_tutorial_ui()
@@ -191,7 +156,7 @@ func _ready() -> void:
 		button.focus_entered.connect(_on_button_hovered.bind(button))
 		button.focus_exited.connect(_on_button_unhovered.bind(button))
 		_set_button_highlight(button, false)
-	_connect_button_touch_sounds()
+	menu_audio.connect_button_touch_sounds()
 	_setup_panel_backgrounds()
 	_setup_achievements_cards_view()
 	_setup_sprite_texts()
@@ -348,7 +313,7 @@ func _on_skip_wave_button_pressed(target_wave: int) -> void:
 		return
 
 	main_node.call("skip_to_wave", target_wave)
-	paused_music_players.clear()
+	menu_audio.clear_paused_music()
 	_resume_game()
 	if main_node.has_method("restore_music_after_priority_audio"):
 		main_node.call("restore_music_after_priority_audio")
@@ -356,7 +321,7 @@ func _on_skip_wave_button_pressed(target_wave: int) -> void:
 
 func _on_restart_button_pressed() -> void:
 	_hide_wave_editor()
-	_stop_death_rumble()
+	menu_audio.stop_death_rumble()
 	var main_node := _get_main_node()
 	if main_node != null and main_node.has_method("save_base_loot"):
 		main_node.call("save_base_loot")
@@ -365,7 +330,7 @@ func _on_restart_button_pressed() -> void:
 
 
 func _on_exit_button_pressed() -> void:
-	_stop_death_rumble()
+	menu_audio.stop_death_rumble()
 	get_tree().quit()
 
 
@@ -373,12 +338,12 @@ func _on_wave_editor_button_pressed() -> void:
 	_hide_tutorial_panel(false)
 	var main_node := _get_main_node()
 	if main_node == null or not main_node.has_method("get_wave_settings_text"):
-		_set_label_sprite_text(wave_editor_feedback, "COULD NOT LOAD", 44.0)
+		MenuText.set_label_sprite_text(wave_editor_feedback, "COULD NOT LOAD", 44.0)
 		wave_editor_feedback.modulate = Color(1.0, 0.7, 0.7, 1.0)
 		wave_editor_panel.show()
 		return
 
-	_set_label_sprite_text(wave_editor_feedback, "", 44.0)
+	MenuText.set_label_sprite_text(wave_editor_feedback, "", 44.0)
 	wave_editor_feedback.modulate = Color(1, 1, 1, 1)
 	wave_editor_text.text = main_node.get_wave_settings_text()
 	wave_editor_panel.show()
@@ -388,18 +353,18 @@ func _on_wave_editor_button_pressed() -> void:
 func _on_wave_editor_apply_button_pressed() -> void:
 	var main_node := _get_main_node()
 	if main_node == null or not main_node.has_method("apply_wave_settings_text"):
-		_set_label_sprite_text(wave_editor_feedback, "COULD NOT APPLY", 44.0)
+		MenuText.set_label_sprite_text(wave_editor_feedback, "COULD NOT APPLY", 44.0)
 		wave_editor_feedback.modulate = Color(1.0, 0.7, 0.7, 1.0)
 		return
 
 	var result: Dictionary = main_node.apply_wave_settings_text(wave_editor_text.text)
 	if result.get("ok", false):
 		wave_editor_text.text = main_node.get_wave_settings_text()
-		_set_label_sprite_text(wave_editor_feedback, "WAVES UPDATED", 44.0)
+		MenuText.set_label_sprite_text(wave_editor_feedback, "WAVES UPDATED", 44.0)
 		wave_editor_feedback.modulate = Color(0.8, 1.0, 0.8, 1.0)
 		return
 
-	_set_label_sprite_text(wave_editor_feedback, "COULD NOT APPLY", 44.0)
+	MenuText.set_label_sprite_text(wave_editor_feedback, "COULD NOT APPLY", 44.0)
 	wave_editor_feedback.modulate = Color(1.0, 0.7, 0.7, 1.0)
 
 
@@ -414,26 +379,26 @@ func _on_achievements_close_button_pressed() -> void:
 func _on_achievements_reset_button_pressed() -> void:
 	if achievements_reset_confirmation_step == 0:
 		achievements_reset_confirmation_step = 1
-		_set_label_sprite_text(achievements_warning_label, "SURE PRESS AGAIN", 46.0)
-		_set_button_sprite_text(achievements_reset_button, "CONFIRM", 54.0, RESET_BUTTON_LETTER_SPACING)
+		MenuText.set_label_sprite_text(achievements_warning_label, "SURE PRESS AGAIN", 46.0)
+		MenuText.set_button_sprite_text(achievements_reset_button, "CONFIRM", 54.0, RESET_BUTTON_LETTER_SPACING)
 		return
 
 	if achievements_reset_confirmation_step == 1:
 		achievements_reset_confirmation_step = 2
-		_set_label_sprite_text(achievements_warning_label, "FINAL CONFIRMATION", 46.0)
-		_set_button_sprite_text(achievements_reset_button, "FOREVER", 54.0, RESET_BUTTON_LETTER_SPACING)
+		MenuText.set_label_sprite_text(achievements_warning_label, "FINAL CONFIRMATION", 46.0)
+		MenuText.set_button_sprite_text(achievements_reset_button, "FOREVER", 54.0, RESET_BUTTON_LETTER_SPACING)
 		return
 
 	var main_node := _get_main_node()
 	if main_node == null or not main_node.has_method("clear_achievements"):
 		_reset_achievement_delete_confirmation()
-		_set_label_sprite_text(achievements_warning_label, "COULD NOT DELETE", 46.0)
+		MenuText.set_label_sprite_text(achievements_warning_label, "COULD NOT DELETE", 46.0)
 		achievements_warning_label.modulate = Color(1.0, 0.7, 0.7, 1.0)
 		return
 
 	main_node.clear_achievements()
 	_reset_achievement_delete_confirmation()
-	_set_label_sprite_text(achievements_warning_label, "ACHIEVEMENTS DELETED", 46.0)
+	MenuText.set_label_sprite_text(achievements_warning_label, "ACHIEVEMENTS DELETED", 46.0)
 	achievements_warning_label.modulate = Color(0.8, 1.0, 0.8, 1.0)
 	_refresh_achievements_panel()
 
@@ -731,9 +696,9 @@ func _show_main_menu() -> void:
 	_hide_wave_editor()
 	_hide_tutorial_panel(false)
 	_hide_achievements_panel()
-	_stop_player(achievements_music)
-	_stop_gameplay_music()
-	_play_player(menu_music)
+	menu_audio.stop_achievements_music()
+	menu_audio.stop_gameplay_music()
+	menu_audio.play_menu_music()
 	menu_background.show()
 	death_background.hide()
 	pause_overlay.hide()
@@ -766,7 +731,7 @@ func _show_pause_menu() -> void:
 	_hide_wave_editor()
 	_hide_tutorial_panel(false)
 	_hide_achievements_panel()
-	_pause_active_music()
+	menu_audio.pause_active_music()
 	menu_background.hide()
 	death_background.hide()
 	pause_overlay.show()
@@ -794,14 +759,14 @@ func _resume_game() -> void:
 	_hide_wave_editor()
 	_hide_tutorial_panel(false)
 	_hide_achievements_panel()
-	_stop_death_rumble()
-	_stop_player(achievements_music)
-	_stop_player(menu_music)
+	menu_audio.stop_death_rumble()
+	menu_audio.stop_achievements_music()
+	menu_audio.stop_menu_music()
 	is_game_over = false
 	is_in_main_menu = false
 	get_tree().paused = false
 	visible = false
-	_resume_paused_music()
+	menu_audio.resume_paused_music()
 
 
 func show_game_over() -> void:
@@ -812,12 +777,12 @@ func show_game_over() -> void:
 	_hide_wave_editor()
 	_hide_tutorial_panel(false)
 	_hide_achievements_panel()
-	_stop_player(achievements_music)
-	_stop_player(menu_music)
-	_stop_player(game_music)
-	_stop_active_scene_audio()
-	_play_player(death_sound)
-	_play_death_rumble()
+	menu_audio.stop_achievements_music()
+	menu_audio.stop_menu_music()
+	menu_audio.stop_game_music()
+	menu_audio.stop_active_scene_audio()
+	menu_audio.play_death_sound()
+	menu_audio.play_death_rumble()
 	menu_background.hide()
 	death_background.show()
 	pause_overlay.hide()
@@ -841,152 +806,9 @@ func show_game_over() -> void:
 	restart_button.grab_focus()
 
 
-func _enable_music_loop(player: AudioStreamPlayer) -> void:
-	if player == null or player.stream == null:
-		return
-
-	if player.stream is AudioStreamMP3:
-		player.stream.loop = true
-	elif player.stream is AudioStreamWAV:
-		player.stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-
-
-func _setup_achievements_music() -> void:
-	achievements_music = AudioStreamPlayer.new()
-	achievements_music.name = "AchievementsMusic"
-	achievements_music.process_mode = Node.PROCESS_MODE_ALWAYS
-	achievements_music.bus = &"Master"
-	achievements_music.stream = ACHIEVEMENTS_MUSIC_STREAM
-	add_child(achievements_music)
-
-
-func _setup_button_touch_sound() -> void:
-	button_touch_sound = AudioStreamPlayer.new()
-	button_touch_sound.name = "ButtonTouchSound"
-	button_touch_sound.process_mode = Node.PROCESS_MODE_ALWAYS
-	button_touch_sound.bus = &"Master"
-	button_touch_sound.stream = BUTTON_TOUCH_SOUND_STREAM
-	add_child(button_touch_sound)
-
-
-func _connect_button_touch_sounds() -> void:
-	for node in find_children("*", "Button", true, false):
-		var button := node as Button
-		if button == null:
-			continue
-		var play_sound := Callable(self, "_play_button_touch_sound")
-		if not button.button_down.is_connected(play_sound):
-			button.button_down.connect(play_sound)
-
-
-func _play_button_touch_sound() -> void:
-	if button_touch_sound == null or button_touch_sound.stream == null:
-		return
-	if button_touch_sound.playing:
-		button_touch_sound.stop()
-	button_touch_sound.play()
-
-
-func _play_player(player: AudioStreamPlayer) -> void:
-	if player == null or player.stream == null:
-		return
-	if not player.playing:
-		player.play()
-
-
-func _stop_player(player: AudioStreamPlayer) -> void:
-	if player == null:
-		return
-	if player.playing:
-		player.stop()
-
-
-func _play_death_rumble() -> void:
-	if death_sound == null or death_sound.stream == null:
-		return
-
-	var duration := death_sound.stream.get_length()
-	if duration <= 0.0:
-		return
-
-	for device_id in Input.get_connected_joypads():
-		Input.stop_joy_vibration(device_id)
-		Input.start_joy_vibration(device_id, DEATH_RUMBLE_WEAK, DEATH_RUMBLE_STRONG, duration)
-
-
-func _stop_death_rumble() -> void:
-	for device_id in Input.get_connected_joypads():
-		Input.stop_joy_vibration(device_id)
-
-
-func _stop_gameplay_music() -> void:
-	_stop_player(game_music)
-
-	var root := get_tree().current_scene
-	if root == null:
-		root = get_tree().root
-
-	var fog_music := root.get_node_or_null("FogMusic") as AudioStreamPlayer
-	_stop_player(fog_music)
-
-	var base_music := root.get_node_or_null("BaseMusic") as AudioStreamPlayer
-	_stop_player(base_music)
-
-
-func _pause_active_music() -> void:
-	paused_music_players.clear()
-
-	var root := get_tree().current_scene
-	if root == null:
-		root = get_tree().root
-
-	for node in root.find_children("*", "AudioStreamPlayer", true, false):
-		var player := node as AudioStreamPlayer
-		if player == null or player == death_sound or not player.playing:
-			continue
-		paused_music_players.append(player)
-		player.stop()
-
-
-func _resume_paused_music() -> void:
-	var resumed_any := false
-
-	for player in paused_music_players:
-		if not is_instance_valid(player):
-			continue
-		if player == death_sound or player.stream == null:
-			continue
-		if not player.playing:
-			player.play()
-			resumed_any = true
-
-	paused_music_players.clear()
-
-	if not resumed_any:
-		_play_player(game_music)
-
-
-func _stop_active_scene_audio() -> void:
-	var root := get_tree().current_scene
-	if root == null:
-		root = get_tree().root
-
-	for node in root.find_children("*", "AudioStreamPlayer", true, false):
-		var player := node as AudioStreamPlayer
-		if player == null or player == death_sound:
-			continue
-		if player.playing:
-			player.stop()
-
-	for node in root.find_children("*", "AudioStreamPlayer2D", true, false):
-		var player_2d := node as AudioStreamPlayer2D
-		if player_2d != null and player_2d.playing:
-			player_2d.stop()
-
-
 func _hide_wave_editor() -> void:
 	wave_editor_panel.hide()
-	_set_label_sprite_text(wave_editor_feedback, "", 44.0)
+	MenuText.set_label_sprite_text(wave_editor_feedback, "", 44.0)
 
 
 func _show_tutorial_panel() -> void:
@@ -1052,7 +874,7 @@ func _update_tutorial_sprite_text(page_data: Dictionary) -> void:
 		tutorial_text_content.remove_child(child)
 		child.queue_free()
 
-	var title_row := _create_sprite_text(
+	var title_row := MenuText.create_sprite_text(
 		String(page_data.get("title", "TUTORIAL")),
 		TUTORIAL_TITLE_TEXT_HEIGHT,
 		TUTORIAL_TEXT_LETTER_SPACING
@@ -1063,7 +885,7 @@ func _update_tutorial_sprite_text(page_data: Dictionary) -> void:
 
 	var page_lines := page_data.get("lines", []) as Array
 	for line in page_lines:
-		var body_row := _create_sprite_text(
+		var body_row := MenuText.create_sprite_text(
 			String(line),
 			TUTORIAL_BODY_TEXT_HEIGHT,
 			TUTORIAL_TEXT_LETTER_SPACING
@@ -1082,8 +904,8 @@ func _show_achievements_panel() -> void:
 	logo.hide()
 	if tutorial_button != null:
 		tutorial_button.hide()
-	_stop_player(menu_music)
-	_play_player(achievements_music)
+	menu_audio.stop_menu_music()
+	menu_audio.play_achievements_music()
 	_reset_achievement_delete_confirmation()
 	_refresh_achievements_panel()
 	achievements_panel.show()
@@ -1095,9 +917,9 @@ func _hide_achievements_panel() -> void:
 	achievements_panel.hide()
 	_reset_achievement_delete_confirmation()
 	if was_visible:
-		_stop_player(achievements_music)
+		menu_audio.stop_achievements_music()
 	if is_in_main_menu and not is_game_over:
-		_play_player(menu_music)
+		menu_audio.play_menu_music()
 		main_panel.show()
 		logo_area.show()
 		logo.show()
@@ -1111,7 +933,7 @@ func _refresh_achievements_panel() -> void:
 	var main_node := _get_main_node()
 	if main_node == null:
 		_update_wave_record_label(null)
-		_set_label_sprite_text(achievements_info_label, "COULD NOT LOAD", 24.0)
+		MenuText.set_label_sprite_text(achievements_info_label, "COULD NOT LOAD", 24.0)
 		achievements_info_label.show()
 		if achievements_scroll != null:
 			achievements_scroll.hide()
@@ -1123,13 +945,13 @@ func _refresh_achievements_panel() -> void:
 		return
 
 	if not main_node.has_method("get_achievements_text"):
-		_set_label_sprite_text(achievements_info_label, "COULD NOT LOAD", 24.0)
+		MenuText.set_label_sprite_text(achievements_info_label, "COULD NOT LOAD", 24.0)
 		achievements_info_label.show()
 		if achievements_scroll != null:
 			achievements_scroll.hide()
 		return
 
-	_set_label_sprite_text(achievements_info_label, "ACHIEVEMENTS", 24.0)
+	MenuText.set_label_sprite_text(achievements_info_label, "ACHIEVEMENTS", 24.0)
 	achievements_info_label.show()
 	if achievements_scroll != null:
 		achievements_scroll.hide()
@@ -1137,38 +959,38 @@ func _refresh_achievements_panel() -> void:
 
 func _reset_achievement_delete_confirmation() -> void:
 	achievements_reset_confirmation_step = 0
-	_set_button_sprite_text(achievements_reset_button, "DELETE", 58.0, RESET_BUTTON_LETTER_SPACING)
-	_set_label_sprite_text(achievements_warning_label, "", 46.0)
+	MenuText.set_button_sprite_text(achievements_reset_button, "DELETE", 58.0, RESET_BUTTON_LETTER_SPACING)
+	MenuText.set_label_sprite_text(achievements_warning_label, "", 46.0)
 	achievements_warning_label.modulate = Color(1.0, 0.78, 0.78, 1.0)
 
 
 func _setup_sprite_texts() -> void:
 	_update_hard_mode_button_text()
-	_set_button_sprite_text(start_button, "PLAY", 92.0)
-	_set_button_sprite_text(resume_button, "RESUME", 82.0)
-	_set_button_sprite_text(restart_button, "RESTART", 78.0)
-	_set_button_sprite_text(achievements_button, "ACHIEVEMENTS", 54.0)
-	_set_button_sprite_text(exit_button, "EXIT", 82.0)
-	_set_button_sprite_text(wave_editor_button, "EDIT WAVES", 68.0)
-	_set_button_sprite_text(tutorial_previous_button, "PREVIOUS", 44.0)
-	_set_button_sprite_text(tutorial_next_button, "NEXT", 50.0)
-	_set_button_sprite_text(tutorial_close_button, "BACK", 56.0)
-	_set_button_sprite_text(achievements_reset_button, "DELETE", 58.0, RESET_BUTTON_LETTER_SPACING)
-	_set_button_sprite_text(achievements_close_button, "BACK", 84.0)
-	_set_button_sprite_text(wave_editor_apply_button, "APPLY", 62.0)
-	_set_button_sprite_text(wave_editor_close_button, "CLOSE", 62.0)
+	MenuText.set_button_sprite_text(start_button, "PLAY", 92.0)
+	MenuText.set_button_sprite_text(resume_button, "RESUME", 82.0)
+	MenuText.set_button_sprite_text(restart_button, "RESTART", 78.0)
+	MenuText.set_button_sprite_text(achievements_button, "ACHIEVEMENTS", 54.0)
+	MenuText.set_button_sprite_text(exit_button, "EXIT", 82.0)
+	MenuText.set_button_sprite_text(wave_editor_button, "EDIT WAVES", 68.0)
+	MenuText.set_button_sprite_text(tutorial_previous_button, "PREVIOUS", 44.0)
+	MenuText.set_button_sprite_text(tutorial_next_button, "NEXT", 50.0)
+	MenuText.set_button_sprite_text(tutorial_close_button, "BACK", 56.0)
+	MenuText.set_button_sprite_text(achievements_reset_button, "DELETE", 58.0, RESET_BUTTON_LETTER_SPACING)
+	MenuText.set_button_sprite_text(achievements_close_button, "BACK", 84.0)
+	MenuText.set_button_sprite_text(wave_editor_apply_button, "APPLY", 62.0)
+	MenuText.set_button_sprite_text(wave_editor_close_button, "CLOSE", 62.0)
 	for index in range(skip_wave_buttons.size()):
 		var skip_button := skip_wave_buttons[index]
 		var target_text := "%d" % int(SKIP_WAVE_TARGETS[index])
-		_set_button_sprite_text(
+		MenuText.set_button_sprite_text(
 			skip_button,
 			target_text,
 			SKIP_WAVE_BUTTON_TEXT_HEIGHT,
 			SKIP_WAVE_BUTTON_LETTER_SPACING
 		)
-	_replace_texture_with_sprite_text(achievements_title_graphic, "ACHIEVEMENTS", 82.0, true)
-	_replace_label_with_sprite_text(wave_editor_title_label, "WAVE EDITOR", 88.0, true)
-	_replace_label_with_sprite_text(wave_editor_help_label, "CHANGE VALUES AND PRESS APPLY", 40.0, false)
+	MenuText.replace_texture_with_sprite_text(achievements_title_graphic, "ACHIEVEMENTS", 82.0, true)
+	MenuText.replace_label_with_sprite_text(wave_editor_title_label, "WAVE EDITOR", 88.0, true)
+	MenuText.replace_label_with_sprite_text(wave_editor_help_label, "CHANGE VALUES AND PRESS APPLY", 40.0, false)
 
 
 func _set_skip_wave_buttons_visible(visible: bool) -> void:
@@ -1181,7 +1003,7 @@ func _update_hard_mode_button_text() -> void:
 		return
 
 	var mode_text := "HARD MODE ON" if hard_mode_enabled else "HARD MODE OFF"
-	_set_button_sprite_text(hard_mode_button, mode_text, 68.0)
+	MenuText.set_button_sprite_text(hard_mode_button, mode_text, 68.0)
 
 
 func _sync_hard_mode_button_state() -> void:
@@ -1216,303 +1038,6 @@ func _save_hard_mode_setting() -> void:
 	config.save(SETTINGS_SAVE_PATH)
 
 
-func _set_button_sprite_text(
-	button: Button,
-	text: String,
-	target_height: float,
-	letter_spacing: int = SPRITE_TEXT_LETTER_SPACING
-) -> void:
-	if button == null:
-		return
-
-	button.text = ""
-	var graphic := button.get_node_or_null("Graphic") as Control
-	if graphic != null:
-		graphic.hide()
-	button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, target_height + 18.0)
-	var previous_text := button.get_node_or_null("SpriteTextRoot")
-	if previous_text != null:
-		button.remove_child(previous_text)
-		previous_text.queue_free()
-
-	var center := CenterContainer.new()
-	center.name = "SpriteTextRoot"
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.offset_left = 0.0
-	center.offset_top = 0.0
-	center.offset_right = 0.0
-	center.offset_bottom = 0.0
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	center.add_child(_create_sprite_text(text, target_height, letter_spacing))
-	button.add_child(center)
-
-
-func _replace_label_with_sprite_text(label: Label, text: String, target_height: float, centered: bool) -> void:
-	if label == null:
-		return
-
-	var parent := label.get_parent()
-	if parent == null:
-		return
-
-	var sprite_text := _create_sprite_text(text, target_height)
-	sprite_text.name = "%sSpriteText" % label.name
-	sprite_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sprite_text.alignment = BoxContainer.ALIGNMENT_CENTER if centered else BoxContainer.ALIGNMENT_BEGIN
-	sprite_text.custom_minimum_size = Vector2(0, maxf(label.custom_minimum_size.y, target_height + 6.0))
-	parent.add_child(sprite_text)
-	parent.move_child(sprite_text, label.get_index())
-	label.hide()
-
-
-func _replace_texture_with_sprite_text(texture_rect: TextureRect, text: String, target_height: float, centered: bool) -> void:
-	if texture_rect == null:
-		return
-
-	var parent := texture_rect.get_parent()
-	if parent == null:
-		return
-
-	var sprite_text := _create_sprite_text(text, target_height)
-	sprite_text.name = "%sSpriteText" % texture_rect.name
-	sprite_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sprite_text.alignment = BoxContainer.ALIGNMENT_CENTER if centered else BoxContainer.ALIGNMENT_BEGIN
-	sprite_text.custom_minimum_size = Vector2(0, maxf(texture_rect.custom_minimum_size.y, target_height + 6.0))
-	parent.add_child(sprite_text)
-	parent.move_child(sprite_text, texture_rect.get_index())
-	texture_rect.hide()
-
-
-func _set_label_sprite_text(label: Label, text: String, target_height: float) -> void:
-	if label == null:
-		return
-
-	label.text = ""
-	label.custom_minimum_size = Vector2(
-		label.custom_minimum_size.x,
-		maxf(label.custom_minimum_size.y, target_height + 8.0)
-	)
-	var previous_text := label.get_node_or_null("SpriteTextRoot")
-	if previous_text != null:
-		label.remove_child(previous_text)
-		previous_text.queue_free()
-	if text.is_empty():
-		return
-
-	var center := CenterContainer.new()
-	center.name = "SpriteTextRoot"
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.offset_left = 0.0
-	center.offset_top = 0.0
-	center.offset_right = 0.0
-	center.offset_bottom = 0.0
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	center.add_child(_create_sprite_text(text, target_height))
-	label.add_child(center)
-
-
-func _create_sprite_text(
-	text: String,
-	target_height: float,
-	letter_spacing: int = SPRITE_TEXT_LETTER_SPACING
-) -> HBoxContainer:
-	var text_row := HBoxContainer.new()
-	text_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	text_row.add_theme_constant_override("separation", letter_spacing)
-	text_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	var normalized_text := text.to_upper()
-	for index in range(normalized_text.length()):
-		var character := normalized_text.substr(index, 1)
-		if character == " ":
-			var space := Control.new()
-			space.custom_minimum_size = Vector2(target_height * SPRITE_TEXT_WORD_SPACING_MULTIPLIER, target_height)
-			text_row.add_child(space)
-			continue
-
-		var glyph_texture := _get_sprite_font_texture(character)
-		if glyph_texture == null:
-			continue
-
-		var is_digit := character.is_valid_int()
-		var previous_character := normalized_text.substr(index - 1, 1) if index > 0 else ""
-		var next_character := normalized_text.substr(index + 1, 1) if index < normalized_text.length() - 1 else ""
-		var digit_left_gap := SPRITE_TEXT_DIGIT_WORD_GAP if is_digit and previous_character == " " else 0.0
-		var digit_right_gap := SPRITE_TEXT_DIGIT_WORD_GAP if is_digit and next_character == " " else 0.0
-		var glyph_height := target_height * SPRITE_TEXT_DIGIT_HEIGHT_MULTIPLIER if is_digit else target_height
-		var glyph_width := glyph_height
-		if glyph_texture.get_height() > 0:
-			glyph_width = float(glyph_texture.get_width()) * glyph_height / float(glyph_texture.get_height())
-
-		var glyph_advance := glyph_width + digit_left_gap + digit_right_gap
-		if is_digit and letter_spacing < 0:
-			glyph_advance = glyph_width + absf(float(letter_spacing)) + SPRITE_TEXT_DIGIT_MIN_GAP
-			glyph_advance += digit_left_gap + digit_right_gap
-
-		var glyph_container := Control.new()
-		glyph_container.custom_minimum_size = Vector2(
-			glyph_advance,
-			glyph_height + _get_sprite_font_accent_height(target_height)
-		)
-		glyph_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-		var glyph_rect := TextureRect.new()
-		glyph_rect.position = Vector2(
-			digit_left_gap,
-			_get_sprite_font_accent_height(target_height) + (target_height - glyph_height) * 0.5
-		)
-		glyph_rect.custom_minimum_size = Vector2(glyph_width, glyph_height)
-		glyph_rect.size = glyph_rect.custom_minimum_size
-		glyph_rect.texture = glyph_texture
-		glyph_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		glyph_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		glyph_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		glyph_container.add_child(glyph_rect)
-
-		if _has_sprite_font_accent(character):
-			glyph_container.add_child(_create_sprite_font_accent(glyph_width, target_height))
-
-		text_row.add_child(glyph_container)
-
-	return text_row
-
-
-func _create_sprite_text_block(
-	text: String,
-	target_height: float,
-	max_line_characters: int,
-	line_separation: int = 2,
-	letter_spacing: int = SPRITE_TEXT_LETTER_SPACING
-) -> VBoxContainer:
-	var block := VBoxContainer.new()
-	block.alignment = BoxContainer.ALIGNMENT_CENTER
-	block.add_theme_constant_override("separation", line_separation)
-	block.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	for line in _wrap_sprite_text_lines(text, max_line_characters):
-		var row := _create_sprite_text(line, target_height, letter_spacing)
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.alignment = BoxContainer.ALIGNMENT_CENTER
-		block.add_child(row)
-
-	return block
-
-
-func _wrap_sprite_text_lines(text: String, max_line_characters: int) -> Array[String]:
-	var lines: Array[String] = []
-	var words := _sanitize_sprite_text(text).split(" ", false)
-	var current_line := ""
-
-	for word in words:
-		if current_line.is_empty():
-			current_line = word
-			continue
-
-		var candidate := "%s %s" % [current_line, word]
-		if candidate.length() > max_line_characters:
-			lines.append(current_line)
-			current_line = word
-		else:
-			current_line = candidate
-
-	if not current_line.is_empty():
-		lines.append(current_line)
-
-	if lines.is_empty():
-		lines.append("")
-
-	return lines
-
-
-func _sanitize_sprite_text(text: String) -> String:
-	var sanitized := text.to_upper()
-	var replacements := {
-		".": " ",
-		",": " ",
-		":": " ",
-		";": " ",
-		"!": " ",
-		"?": " ",
-		"-": " ",
-		"'": "",
-		"\"": "",
-		"/": " ",
-		"(": " ",
-		")": " ",
-	}
-
-	for character in replacements:
-		sanitized = sanitized.replace(character, String(replacements[character]))
-
-	return sanitized.strip_edges()
-
-
-func _get_sprite_font_texture(character: String) -> Texture2D:
-	if DIGIT_TEXTURES.has(character):
-		return DIGIT_TEXTURES[character] as Texture2D
-
-	var normalized_character := _normalize_sprite_font_character(character)
-	var character_index := LETTER_FONT_CHARS.find(normalized_character)
-	if character_index < 0:
-		return null
-
-	var texture_size := LETTER_FONT_TEXTURE.get_size()
-	var cell_width := texture_size.x / float(LETTER_FONT_COLUMNS)
-	var cell_height := texture_size.y / float(LETTER_FONT_ROWS)
-	var column := character_index % LETTER_FONT_COLUMNS
-	var row := int(character_index / LETTER_FONT_COLUMNS)
-	var atlas_texture := AtlasTexture.new()
-	atlas_texture.atlas = LETTER_FONT_TEXTURE
-	atlas_texture.region = Rect2(
-		column * cell_width,
-		row * cell_height,
-		cell_width,
-		cell_height
-	)
-	return atlas_texture
-
-
-func _has_sprite_font_accent(character: String) -> bool:
-	return character in ["Á", "É", "Í", "Ó", "Ú"]
-
-
-func _get_sprite_font_accent_height(target_height: float) -> float:
-	return target_height * 0.22
-
-
-func _create_sprite_font_accent(glyph_width: float, target_height: float) -> Control:
-	var accent := ColorRect.new()
-	var accent_width := maxf(target_height * 0.22, 6.0)
-	var accent_height := maxf(target_height * 0.08, 3.0)
-	accent.color = Color.BLACK
-	accent.size = Vector2(accent_width, accent_height)
-	accent.position = Vector2(
-		(glyph_width - accent_width) * 0.5 + target_height * 0.08,
-		target_height * 0.03
-	)
-	accent.rotation = -0.45
-	accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return accent
-
-
-func _normalize_sprite_font_character(character: String) -> String:
-	match character:
-		"Á", "À", "Ä", "Â":
-			return "A"
-		"É", "È", "Ë", "Ê":
-			return "E"
-		"Í", "Ì", "Ï", "Î":
-			return "I"
-		"Ó", "Ò", "Ö", "Ô":
-			return "O"
-		"Ú", "Ù", "Ü", "Û":
-			return "U"
-		"Ñ":
-			return "N"
-		_:
-			return character
-
-
 func _setup_achievements_cards_view() -> void:
 	achievements_info_label.hide()
 
@@ -1523,7 +1048,7 @@ func _setup_achievements_cards_view() -> void:
 	achievements_record_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	achievements_record_row.add_theme_constant_override("separation", 10)
 
-	var record_title := _create_sprite_text("RECORD", 70.0)
+	var record_title := MenuText.create_sprite_text("RECORD", 70.0)
 	record_title.name = "WaveRecordTitle"
 	record_title.custom_minimum_size = RECORD_TITLE_SIZE
 	record_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1576,7 +1101,7 @@ func _render_record_digits(value: int) -> void:
 		child.queue_free()
 
 	for digit_char in str(maxi(value, 0)):
-		var digit_texture: Texture2D = DIGIT_TEXTURES.get(str(digit_char))
+		var digit_texture: Texture2D = SpriteFont.DIGIT_TEXTURES.get(str(digit_char))
 		if digit_texture == null:
 			continue
 
@@ -1596,7 +1121,7 @@ func _render_record_digits(value: int) -> void:
 
 func _refresh_achievement_cards(achievements: Array) -> void:
 	if achievements_cards_list == null:
-		_set_label_sprite_text(achievements_info_label, "COULD NOT LOAD", 24.0)
+		MenuText.set_label_sprite_text(achievements_info_label, "COULD NOT LOAD", 24.0)
 		achievements_info_label.show()
 		if achievements_scroll != null:
 			achievements_scroll.hide()
@@ -1666,7 +1191,7 @@ func _create_achievement_card(achievement_data: Dictionary, unlocked: bool) -> C
 		else String(achievement_data.get("description", ""))
 	)
 
-	var status_text := _create_sprite_text(
+	var status_text := MenuText.create_sprite_text(
 		"UNLOCKED" if unlocked else "LOCKED",
 		ACHIEVEMENT_STATUS_TEXT_HEIGHT,
 		-8
@@ -1675,7 +1200,7 @@ func _create_achievement_card(achievement_data: Dictionary, unlocked: bool) -> C
 	status_text.alignment = BoxContainer.ALIGNMENT_CENTER
 	text_content.add_child(status_text)
 
-	var title_block := _create_sprite_text_block(
+	var title_block := MenuText.create_sprite_text_block(
 		title_text,
 		ACHIEVEMENT_TITLE_TEXT_HEIGHT,
 		ACHIEVEMENT_TITLE_MAX_LINE_CHARS,
@@ -1685,7 +1210,7 @@ func _create_achievement_card(achievement_data: Dictionary, unlocked: bool) -> C
 	title_block.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text_content.add_child(title_block)
 
-	var description_block := _create_sprite_text_block(
+	var description_block := MenuText.create_sprite_text_block(
 		description_text,
 		ACHIEVEMENT_DESCRIPTION_TEXT_HEIGHT,
 		ACHIEVEMENT_DESCRIPTION_MAX_LINE_CHARS,

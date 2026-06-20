@@ -1,32 +1,13 @@
-extends CharacterBody2D
+extends Zombie
 
-signal died
+## Atomic zombie: chases the player but stops to spit acid from range.
 
-@export var move_speed: float = 105.0
-@export_range(0.1, 2.0, 0.01) var sprite_scale: float = 0.28
-@export_range(0.1, 2.0, 0.01) var spawn_sprite_scale: float = 0.2
-@export var sprite_offset: Vector2 = Vector2(0, 14)
-@export var dead_sprite_scale: float = 0.38
-@export var dead_sprite_offset: Vector2 = Vector2(0, 14)
-@export var corpse_duration: float = 0.9
-@export var spawn_duration: float = 2.0
-@export var spawn_shake_distance: float = 12.0
-@export var spawn_shake_speed: float = 32.0
-@export_range(0.0, 1.0, 0.01) var zombie_sound_chance: float = 0.18
-@export var zombie_sound_volume_db: float = 20.0
-@export var zombie_sound_check_interval: float = 2.5
 @export var spit_min_distance: float = 240.0
 @export var spit_max_distance: float = 620.0
 @export var spit_cooldown: float = 4.0
 @export var spit_windup_duration: float = 0.45
 @export var spit_origin_offset: float = 42.0
 
-const DEAD_ANIMATION := &"Dead"
-const SPAWN_ANIMATION := &"Spawn"
-const WALK_UP_ANIMATION := &"Andar arr"
-const WALK_DOWN_ANIMATION := &"Andar abj"
-const WALK_LEFT_ANIMATION := &"Andar izq"
-const WALK_RIGHT_ANIMATION := &"Andar der"
 const DEAD_FRAME_SIZE := Vector2(685, 501)
 const WALK_FRAME_SIZE := Vector2(447, 608)
 const WALK_FRAME_COUNT := 4
@@ -37,86 +18,32 @@ const WALK_UP_TEXTURE := preload("res://assets/Zombies/Atómico/Andar arriba.png
 const WALK_LEFT_TEXTURE := preload("res://assets/Zombies/Atómico/Andar izquierda.png")
 const WALK_RIGHT_TEXTURE := preload("res://assets/Zombies/Atómico/Andar derecha.png")
 const SPAWN_TEXTURE := preload("res://assets/Zombies/Atómico/Spawn.png")
-const ZOMBIE_SOUND := preload("res://assets/Sonido/Efectos/Sonido zombie.mp3")
 const ACID_SPIT_SCRIPT := preload("res://scripts/atomic_acid_spit.gd")
 
-static var sprite_frames_cache: SpriteFrames
-
-@onready var body_collision: CollisionShape2D = $CollisionShape2D
-@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
-@onready var touch_area: Area2D = $TouchArea
-@onready var touch_collision: CollisionShape2D = $TouchArea/CollisionShape2D
-
-var player: Node2D = null
-var is_dead: bool = false
-var is_spawning: bool = true
-var corpse_timer: float = 0.0
-var spawn_timer: float = 0.0
-var zombie_sound_player: AudioStreamPlayer2D = null
-var zombie_sound_timer: float = 0.0
 var spit_cooldown_timer: float = 0.0
 var spit_windup_timer: float = 0.0
 var spit_direction: Vector2 = Vector2.DOWN
 var spit_target_position: Vector2 = Vector2.ZERO
 
 
-func _ready() -> void:
-	add_to_group("zombies")
-	_ensure_sprite_frames()
-	_setup_zombie_sound()
-	touch_area.body_entered.connect(_on_touch_area_body_entered)
-	touch_area.monitoring = false
-	animated_sprite.rotation = 0.0
-	spawn_timer = spawn_duration
-	animated_sprite.play(SPAWN_ANIMATION)
-	animated_sprite.stop()
-	animated_sprite.frame = 0
-	player = get_tree().get_first_node_in_group("player") as Node2D
-	zombie_sound_timer = zombie_sound_check_interval
-	_update_visuals()
+func _init() -> void:
+	move_speed = 105.0
 
 
-func _physics_process(delta: float) -> void:
-	if is_dead:
-		corpse_timer = maxf(corpse_timer - delta, 0.0)
-		velocity = Vector2.ZERO
-		if corpse_timer == 0.0:
-			queue_free()
-		return
+func get_zombie_type() -> StringName:
+	return TYPE_ATOMIC
 
-	if is_spawning:
-		spawn_timer = maxf(spawn_timer - delta, 0.0)
-		velocity = Vector2.ZERO
-		move_and_slide()
-		if animated_sprite.animation != SPAWN_ANIMATION:
-			animated_sprite.play(SPAWN_ANIMATION)
-			animated_sprite.stop()
-		animated_sprite.frame = 0
-		_update_visuals()
-		if spawn_timer == 0.0:
-			_finish_spawn()
-		return
 
-	zombie_sound_timer = maxf(zombie_sound_timer - delta, 0.0)
-	if zombie_sound_timer == 0.0:
-		_try_play_zombie_sound()
-		zombie_sound_timer = zombie_sound_check_interval
+func _process_active(delta: float) -> void:
 	spit_cooldown_timer = maxf(spit_cooldown_timer - delta, 0.0)
-
-	if not is_instance_valid(player):
-		player = get_tree().get_first_node_in_group("player") as Node2D
-		if player == null:
-			velocity = Vector2.ZERO
-			move_and_slide()
-			return
-
 	var direction := global_position.direction_to(player.global_position)
+
 	if spit_windup_timer > 0.0:
 		spit_windup_timer = maxf(spit_windup_timer - delta, 0.0)
 		velocity = Vector2.ZERO
 		move_and_slide()
 		_update_visuals()
-		_play_direction_animation(spit_direction)
+		_play_walk_animation(spit_direction)
 		if spit_windup_timer == 0.0:
 			_spawn_acid_spit()
 		return
@@ -128,99 +55,6 @@ func _physics_process(delta: float) -> void:
 
 	velocity = direction * move_speed
 	move_and_slide()
-	_update_visuals()
-	_update_animation()
-
-
-func _on_touch_area_body_entered(body: Node) -> void:
-	if body.is_in_group("player") and body.has_method("die"):
-		body.die()
-
-
-func die() -> void:
-	if is_dead:
-		return
-
-	is_dead = true
-	is_spawning = false
-	corpse_timer = corpse_duration
-	remove_from_group("zombies")
-	velocity = Vector2.ZERO
-	collision_layer = 0
-	collision_mask = 0
-	body_collision.disabled = true
-	touch_collision.disabled = true
-	touch_area.monitoring = false
-	touch_area.monitorable = false
-	emit_signal("died")
-	animated_sprite.play(DEAD_ANIMATION)
-	animated_sprite.stop()
-	animated_sprite.frame = 0
-	animated_sprite.rotation_degrees = 90.0
-	_update_visuals()
-
-
-func take_damage(_amount: int = 1) -> void:
-	if is_dead or is_spawning:
-		return
-
-	die()
-
-
-func get_zombie_type() -> StringName:
-	return &"atomic"
-
-
-func _update_animation() -> void:
-	if is_spawning or is_dead:
-		return
-
-	_play_direction_animation(velocity)
-
-
-func _play_direction_animation(direction: Vector2) -> void:
-	var next_animation := _get_walk_animation_name(direction)
-	if animated_sprite.animation != next_animation:
-		animated_sprite.play(next_animation)
-	elif not animated_sprite.is_playing():
-		animated_sprite.play()
-
-
-func _update_visuals() -> void:
-	var current_scale := sprite_scale
-	var current_offset := sprite_offset
-
-	if is_dead:
-		current_scale = dead_sprite_scale
-		current_offset = dead_sprite_offset
-	elif is_spawning:
-		current_scale = spawn_sprite_scale
-		current_offset += _get_spawn_shake_offset()
-
-	animated_sprite.scale = Vector2.ONE * current_scale
-	animated_sprite.position = current_offset
-
-
-func _get_walk_animation_name(direction: Vector2) -> StringName:
-	if absf(direction.x) > absf(direction.y):
-		return WALK_RIGHT_ANIMATION if direction.x > 0.0 else WALK_LEFT_ANIMATION
-	return WALK_DOWN_ANIMATION if direction.y > 0.0 else WALK_UP_ANIMATION
-
-
-func _get_spawn_shake_offset() -> Vector2:
-	if not is_spawning:
-		return Vector2.ZERO
-
-	var shake_phase := (spawn_duration - spawn_timer) * spawn_shake_speed
-	return Vector2(
-		sin(shake_phase * 1.3) * spawn_shake_distance,
-		absf(sin(shake_phase * 0.9)) * -spawn_shake_distance * 0.35
-	)
-
-
-func _finish_spawn() -> void:
-	is_spawning = false
-	touch_area.monitoring = true
 	_update_visuals()
 	_update_animation()
 
@@ -243,7 +77,7 @@ func _start_spit(direction: Vector2) -> void:
 	velocity = Vector2.ZERO
 	move_and_slide()
 	_update_visuals()
-	_play_direction_animation(spit_direction)
+	_play_walk_animation(spit_direction)
 
 
 func _spawn_acid_spit() -> void:
@@ -259,76 +93,12 @@ func _spawn_acid_spit() -> void:
 	)
 
 
-func _setup_zombie_sound() -> void:
-	zombie_sound_player = AudioStreamPlayer2D.new()
-	zombie_sound_player.stream = ZOMBIE_SOUND
-	zombie_sound_player.volume_db = zombie_sound_volume_db
-	add_child(zombie_sound_player)
-
-
-func _try_play_zombie_sound() -> void:
-	if zombie_sound_player == null:
-		return
-	if randf() > zombie_sound_chance:
-		return
-	zombie_sound_player.play()
-
-
-func _ensure_sprite_frames() -> void:
-	if animated_sprite.sprite_frames == null:
-		animated_sprite.sprite_frames = _get_sprite_frames()
-
-
-static func _get_sprite_frames() -> SpriteFrames:
-	if sprite_frames_cache != null:
-		return sprite_frames_cache
-
+func _build_sprite_frames() -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	_add_single_frame_animation(frames, DEAD_ANIMATION, DEAD_TEXTURE, DEAD_FRAME_SIZE, 1.0)
-	_add_strip_animation(frames, WALK_DOWN_ANIMATION, WALK_DOWN_TEXTURE, 7.0)
-	_add_strip_animation(frames, WALK_UP_ANIMATION, WALK_UP_TEXTURE, 7.0)
-	_add_strip_animation(frames, WALK_RIGHT_ANIMATION, WALK_RIGHT_TEXTURE, 7.0)
-	_add_strip_animation(frames, WALK_LEFT_ANIMATION, WALK_LEFT_TEXTURE, 7.0)
+	_add_strip_animation(frames, WALK_DOWN_ANIMATION, WALK_DOWN_TEXTURE, WALK_FRAME_SIZE, WALK_FRAME_COUNT, 7.0)
+	_add_strip_animation(frames, WALK_UP_ANIMATION, WALK_UP_TEXTURE, WALK_FRAME_SIZE, WALK_FRAME_COUNT, 7.0)
+	_add_strip_animation(frames, WALK_RIGHT_ANIMATION, WALK_RIGHT_TEXTURE, WALK_FRAME_SIZE, WALK_FRAME_COUNT, 7.0)
+	_add_strip_animation(frames, WALK_LEFT_ANIMATION, WALK_LEFT_TEXTURE, WALK_FRAME_SIZE, WALK_FRAME_COUNT, 7.0)
 	_add_single_frame_animation(frames, SPAWN_ANIMATION, SPAWN_TEXTURE, SPAWN_FRAME_SIZE, 6.0)
-	sprite_frames_cache = frames
-	return sprite_frames_cache
-
-
-static func _add_strip_animation(
-	frames: SpriteFrames,
-	animation_name: StringName,
-	texture: Texture2D,
-	speed: float
-) -> void:
-	frames.add_animation(animation_name)
-	frames.set_animation_loop(animation_name, true)
-	frames.set_animation_speed(animation_name, speed)
-
-	for frame_index in range(WALK_FRAME_COUNT):
-		var frame_region := Rect2(
-			WALK_FRAME_SIZE.x * frame_index,
-			0,
-			WALK_FRAME_SIZE.x,
-			WALK_FRAME_SIZE.y
-		)
-		frames.add_frame(animation_name, _make_atlas_texture(texture, frame_region))
-
-
-static func _add_single_frame_animation(
-	frames: SpriteFrames,
-	animation_name: StringName,
-	texture: Texture2D,
-	frame_size: Vector2,
-	speed: float
-) -> void:
-	frames.add_animation(animation_name)
-	frames.set_animation_loop(animation_name, false)
-	frames.set_animation_speed(animation_name, speed)
-	frames.add_frame(animation_name, _make_atlas_texture(texture, Rect2(Vector2.ZERO, frame_size)))
-
-
-static func _make_atlas_texture(texture: Texture2D, region: Rect2) -> AtlasTexture:
-	var atlas_texture := AtlasTexture.new()
-	atlas_texture.atlas = texture
-	atlas_texture.region = region
-	return atlas_texture
+	return frames
