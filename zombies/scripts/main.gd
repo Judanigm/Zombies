@@ -880,4 +880,3 @@ func _create_achievement_sprite_text_row(text: String, target_height: float, let
 		row.add_child(glyph_rect)
 
 	return row
-
