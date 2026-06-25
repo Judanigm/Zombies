@@ -1,0 +1,766 @@
+[gd_scene format=3]
+
+
+[ext_resource type="Script" uid="uid://bahsfdhqckxcw" path="res://scripts/player.gd" id="1_player_script"]
+[ext_resource type="Script" uid="uid://bwke1by4jb11o" path="res://scripts/menu.gd" id="2_menu_script"]
+[ext_resource type="Script" uid="uid://bngki5tt00qx6" path="res://scripts/main.gd" id="3_main_script"]
+[ext_resource type="Texture2D" uid="uid://dterdch7vesb4" path="res://assets/Player/mapa_fondo.png" id="3_map_texture"]
+[ext_resource type="Texture2D" uid="uid://d0o67gvdltah2" path="res://assets/Texto/Fondo menu.png" id="3_menu_background"]
+[ext_resource type="Texture2D" uid="uid://bbi8pgvm2cn4r" path="res://assets/Player/Quieto.png" id="3_tipki"]
+[ext_resource type="Texture2D" uid="uid://deex8rcyxru10" path="res://assets/Player/Andar sprite.png" id="4_85g3d"]
+[ext_resource type="Texture2D" uid="uid://dj7q3686htpot" path="res://assets/Player/Shoot down.png" id="4_eb6dy"]
+[ext_resource type="Texture2D" uid="uid://ce3bk2gwm3vej" path="res://assets/Texto/Logo del juego.png" id="4_menu_logo"]
+[ext_resource type="Texture2D" uid="uid://bd2fachioglpy" path="res://assets/Player/Andar izquierda.png" id="5_choun"]
+[ext_resource type="Texture2D" uid="uid://dc53t0vc1se30" path="res://assets/Texto/Fono muerte.png" id="5_death_background"]
+[ext_resource type="Texture2D" uid="uid://c3awpgsjo2nmc" path="res://assets/Player/Shoot left.png" id="5_trceg"]
+[ext_resource type="Texture2D" uid="uid://dbclorm36ad6b" path="res://assets/Player/Shoot right.png" id="6_a8y0u"]
+[ext_resource type="Texture2D" uid="uid://dk6rb65glpfvj" path="res://assets/Player/Andar derecha.png" id="6_ya4ey"]
+[ext_resource type="Texture2D" uid="uid://chfeoid4vgslo" path="res://assets/Player/Andar alante sprite.png" id="7_eb6dy"]
+[ext_resource type="Texture2D" uid="uid://cs1nf1fk5nrcv" path="res://assets/Player/shoot up.png" id="7_jkv2x"]
+[ext_resource type="Texture2D" uid="uid://cp61ss254akuk" path="res://assets/Texto/You-died.png" id="8_game_over_title"]
+[ext_resource type="Texture2D" uid="uid://btevn0rgxf41v" path="res://assets/Texto/Pause.png" id="8_pause_title"]
+[ext_resource type="Texture2D" uid="uid://wb54f5ffm2dq" path="res://assets/Texto/Play.png" id="8_play_button"]
+[ext_resource type="AudioStream" uid="uid://dx6io6dpithyj" path="res://assets/Sonido/Efectos/Muerte.mp3" id="10_death_sound"]
+[ext_resource type="AudioStream" uid="uid://k6hbu6sjtmbb" path="res://assets/Sonido/Música/en el juego.wav" id="11_game_music"]
+[ext_resource type="AudioStream" uid="uid://ko3cyifa50o0" path="res://assets/Sonido/Música/Menu.mp3" id="11_menu_music"]
+[ext_resource type="Texture2D" uid="uid://gbotshvj18ij" path="res://assets/Power ups/Granada/Granada.png" id="12_grenade_icon"]
+[ext_resource type="Texture2D" uid="uid://dekml1y80xm81" path="res://assets/Power ups/Kit médico/Kit médico.png" id="13_medkit_icon"]
+[ext_resource type="Texture2D" uid="uid://bi5qyj70iyov1" path="res://assets/Power ups/Mina/Tirada.png" id="14_mine_icon"]
+[ext_resource type="Texture2D" uid="uid://s3jg7aeqw53i" path="res://assets/Power ups/Orbe de teletransportación/Orbe teletrasportador.png" id="16_teleport_orb_icon"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_horizontal"]
+size = Vector2(2880, 64)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_vertical"]
+size = Vector2(64, 2176)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rock_a"]
+size = Vector2(72, 52)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rock_b"]
+size = Vector2(64, 64)
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
+radius = 19.0
+height = 104.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_o6xl0"]
+atlas = ExtResource("3_tipki")
+region = Rect2(0, 0, 179, 308)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_y6deb"]
+atlas = ExtResource("4_eb6dy")
+region = Rect2(0, 0, 307, 392)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_og1vs"]
+atlas = ExtResource("5_trceg")
+region = Rect2(0, 0, 307, 392)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2wyq8"]
+atlas = ExtResource("6_a8y0u")
+region = Rect2(0, 0, 307, 392)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vxglm"]
+atlas = ExtResource("7_jkv2x")
+region = Rect2(0, 0, 307, 392)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tipki"]
+atlas = ExtResource("4_85g3d")
+region = Rect2(0, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_85g3d"]
+atlas = ExtResource("4_85g3d")
+region = Rect2(447, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_choun"]
+atlas = ExtResource("4_85g3d")
+region = Rect2(894, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ya4ey"]
+atlas = ExtResource("4_85g3d")
+region = Rect2(1341, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eb6dy"]
+atlas = ExtResource("5_choun")
+region = Rect2(0, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_trceg"]
+atlas = ExtResource("5_choun")
+region = Rect2(447, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a8y0u"]
+atlas = ExtResource("5_choun")
+region = Rect2(894, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jkv2x"]
+atlas = ExtResource("5_choun")
+region = Rect2(1341, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jbj1t"]
+atlas = ExtResource("6_ya4ey")
+region = Rect2(0, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_muem4"]
+atlas = ExtResource("6_ya4ey")
+region = Rect2(447, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dp3eg"]
+atlas = ExtResource("6_ya4ey")
+region = Rect2(894, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0ld40"]
+atlas = ExtResource("6_ya4ey")
+region = Rect2(1341, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gqmmt"]
+atlas = ExtResource("7_eb6dy")
+region = Rect2(0, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yc10j"]
+atlas = ExtResource("7_eb6dy")
+region = Rect2(447, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jscy8"]
+atlas = ExtResource("7_eb6dy")
+region = Rect2(894, 0, 447, 608)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pm3ni"]
+atlas = ExtResource("7_eb6dy")
+region = Rect2(1341, 0, 447, 608)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_fv21b"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_o6xl0")
+}],
+"loop": true,
+"name": &"Idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_y6deb")
+}],
+"loop": true,
+"name": &"Shoot down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_og1vs")
+}],
+"loop": true,
+"name": &"Shoot left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2wyq8")
+}],
+"loop": true,
+"name": &"Shoot right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vxglm")
+}],
+"loop": true,
+"name": &"Shoot up",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tipki")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_85g3d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_choun")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ya4ey")
+}],
+"loop": true,
+"name": &"Walk down",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eb6dy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_trceg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a8y0u")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jkv2x")
+}],
+"loop": true,
+"name": &"Walk left",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jbj1t")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_muem4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dp3eg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0ld40")
+}],
+"loop": true,
+"name": &"Walk right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gqmmt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yc10j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jscy8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pm3ni")
+}],
+"loop": true,
+"name": &"Walk up",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_menu_logo_cropped"]
+atlas = ExtResource("4_menu_logo")
+region = Rect2(49, 190, 766, 335)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_panel"]
+bg_color = Color(0.109804, 0.133333, 0.168627, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.972549, 0.92549, 0.772549, 0.35)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 10
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_menu_button"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_button_focus"]
+bg_color = Color(0.972549, 0.92549, 0.772549, 0.18)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.972549, 0.92549, 0.772549, 0.9)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.2)
+shadow_size = 6
+
+[node name="Menu" type="CanvasLayer" unique_id=274001003]
+layer = 10
+script = ExtResource("2_menu_script")
+
+[node name="MenuRoot" type="Control" parent="." unique_id=1454721755]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="ColorRect" type="TextureRect" parent="MenuRoot" unique_id=421703316]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_menu_background")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="DeathBackground" type="TextureRect" parent="MenuRoot" unique_id=1819434757]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("5_death_background")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="PauseOverlay" type="ColorRect" parent="MenuRoot" unique_id=488268183]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0392157, 0.054902, 0.0784314, 0.72)
+
+[node name="LogoArea" type="Control" parent="MenuRoot" unique_id=275784084]
+z_index = 5
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -500.0
+offset_top = 24.0
+offset_right = 500.0
+offset_bottom = 260.0
+grow_horizontal = 2
+
+[node name="Logo" type="TextureRect" parent="MenuRoot/LogoArea" unique_id=1910494292]
+custom_minimum_size = Vector2(920, 402)
+layout_mode = 0
+texture = SubResource("AtlasTexture_menu_logo_cropped")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Panel" type="PanelContainer" parent="MenuRoot" unique_id=1103587658]
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -310.0
+offset_top = -250.0
+offset_right = 310.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="MenuRoot/Panel" unique_id=1597093356]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 70
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuRoot/Panel/MarginContainer" unique_id=596180078]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="MenuRoot/Panel/MarginContainer/VBoxContainer" unique_id=1399243548]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_font_sizes/font_size = 64
+text = "ZOMBIES"
+horizontal_alignment = 1
+
+[node name="PauseTitleGraphic" type="TextureRect" parent="MenuRoot/Panel/MarginContainer/VBoxContainer" unique_id=1384510279]
+visible = false
+custom_minimum_size = Vector2(280, 96)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("8_pause_title")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GameOverTitleGraphic" type="TextureRect" parent="MenuRoot/Panel/MarginContainer/VBoxContainer" unique_id=33067453]
+visible = false
+custom_minimum_size = Vector2(420, 150)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("8_game_over_title")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SpacerTop" type="Control" parent="MenuRoot/Panel/MarginContainer/VBoxContainer" unique_id=203871142]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="MenuRoot/Panel/MarginContainer/VBoxContainer" unique_id=46029840]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.858824, 1)
+theme_override_colors/font_focus_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_colors/font_pressed_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_colors/font_hover_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_constants/h_separation = 0
+theme_override_font_sizes/font_size = 44
+theme_override_styles/normal = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_button_focus")
+theme_override_styles/focus = SubResource("StyleBoxFlat_menu_button_focus")
+flat = true
+
+[node name="Graphic" type="TextureRect" parent="MenuRoot/Panel/MarginContainer/VBoxContainer/StartButton" unique_id=1365330518]
+custom_minimum_size = Vector2(300, 111)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -55.5
+offset_right = 150.0
+offset_bottom = 55.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("8_play_button")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="AchievementsButton" type="Button" parent="MenuRoot/Panel/MarginContainer/VBoxContainer" unique_id=301226114]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.858824, 1)
+theme_override_colors/font_focus_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_colors/font_pressed_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_colors/font_hover_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_constants/h_separation = 0
+theme_override_font_sizes/font_size = 38
+theme_override_styles/normal = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_button_focus")
+theme_override_styles/focus = SubResource("StyleBoxFlat_menu_button_focus")
+flat = true
+
+[node name="Graphic" type="TextureRect" parent="MenuRoot/Panel/MarginContainer/VBoxContainer/AchievementsButton" unique_id=1454304216]
+custom_minimum_size = Vector2(240, 89)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -44.5
+offset_right = 120.0
+offset_bottom = 44.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ResumeButton" type="Button" parent="MenuRoot/Panel/MarginContainer/VBoxContainer" unique_id=1573972899]
+visible = false
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.858824, 1)
+theme_override_colors/font_focus_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_colors/font_pressed_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_colors/font_hover_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_constants/h_separation = 0
+theme_override_font_sizes/font_size = 44
+theme_override_styles/normal = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_button_focus")
+theme_override_styles/focus = SubResource("StyleBoxFlat_menu_button_focus")
+flat = true
+
+[node name="Graphic" type="TextureRect" parent="MenuRoot/Panel/MarginContainer/VBoxContainer/ResumeButton" unique_id=2048081129]
+custom_minimum_size = Vector2(300, 111)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -55.5
+offset_right = 150.0
+offset_bottom = 55.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("8_play_button")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RestartButton" type="Button" parent="MenuRoot/Panel/MarginContainer/VBoxContainer" unique_id=502267922]
+visible = false
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.858824, 1)
+theme_override_colors/font_focus_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_colors/font_pressed_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_colors/font_hover_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_constants/h_separation = 0
+theme_override_font_sizes/font_size = 44
+theme_override_styles/normal = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_button_focus")
+theme_override_styles/focus = SubResource("StyleBoxFlat_menu_button_focus")
+flat = true
+
+[node name="Graphic" type="TextureRect" parent="MenuRoot/Panel/MarginContainer/VBoxContainer/RestartButton" unique_id=1021598045]
+custom_minimum_size = Vector2(300, 111)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -55.5
+offset_right = 150.0
+offset_bottom = 55.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="WaveEditorButton" type="Button" parent="MenuRoot/Panel/MarginContainer/VBoxContainer" unique_id=179318224]
+visible = false
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.858824, 1)
+theme_override_colors/font_focus_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_colors/font_pressed_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_colors/font_hover_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_font_sizes/font_size = 38
+theme_override_styles/normal = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_button_focus")
+theme_override_styles/focus = SubResource("StyleBoxFlat_menu_button_focus")
+text = "Edit waves"
+flat = true
+
+[node name="ExitButton" type="Button" parent="MenuRoot/Panel/MarginContainer/VBoxContainer" unique_id=379040532]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.858824, 1)
+theme_override_colors/font_focus_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_colors/font_pressed_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_colors/font_hover_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_constants/h_separation = 0
+theme_override_font_sizes/font_size = 44
+theme_override_styles/normal = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_button_focus")
+theme_override_styles/focus = SubResource("StyleBoxFlat_menu_button_focus")
+flat = true
+
+[node name="Graphic" type="TextureRect" parent="MenuRoot/Panel/MarginContainer/VBoxContainer/ExitButton" unique_id=1926102608]
+custom_minimum_size = Vector2(240, 129)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -64.5
+offset_right = 120.0
+offset_bottom = 64.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SpacerBottom" type="Control" parent="MenuRoot/Panel/MarginContainer/VBoxContainer" unique_id=1902884356]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+
+[node name="AchievementsPanel" type="PanelContainer" parent="MenuRoot" unique_id=1859427735]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="MenuRoot/AchievementsPanel" unique_id=1977961672]
+layout_mode = 2
+theme_override_constants/margin_left = 56
+theme_override_constants/margin_top = 56
+theme_override_constants/margin_right = 56
+theme_override_constants/margin_bottom = 56
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuRoot/AchievementsPanel/MarginContainer" unique_id=1474913963]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="TextureRect" parent="MenuRoot/AchievementsPanel/MarginContainer/VBoxContainer" unique_id=620385254]
+custom_minimum_size = Vector2(300, 111)
+layout_mode = 2
+size_flags_horizontal = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="InfoLabel" type="Label" parent="MenuRoot/AchievementsPanel/MarginContainer/VBoxContainer" unique_id=1294477247]
+custom_minimum_size = Vector2(0, 320)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.92, 0.92, 0.92, 0.9)
+theme_override_font_sizes/font_size = 36
+text = "This section is ready.
+
+There are no unlockable achievements yet, but they will appear here when we add them."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="WarningLabel" type="Label" parent="MenuRoot/AchievementsPanel/MarginContainer/VBoxContainer" unique_id=1305839489]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.78, 1)
+theme_override_font_sizes/font_size = 30
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="MenuRoot/AchievementsPanel/MarginContainer/VBoxContainer" unique_id=941449736]
+layout_mode = 2
+theme_override_constants/separation = 36
+alignment = 1
+
+[node name="ResetButton" type="Button" parent="MenuRoot/AchievementsPanel/MarginContainer/VBoxContainer/Buttons" unique_id=1807342985]
+custom_minimum_size = Vector2(340, 80)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.858824, 1)
+theme_override_colors/font_focus_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_colors/font_pressed_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_colors/font_hover_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_font_sizes/font_size = 34
+theme_override_styles/normal = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_button_focus")
+theme_override_styles/focus = SubResource("StyleBoxFlat_menu_button_focus")
+text = "Delete achievements"
+flat = true
+
+[node name="CloseButton" type="Button" parent="MenuRoot/AchievementsPanel/MarginContainer/VBoxContainer/Buttons" unique_id=120715532]
+custom_minimum_size = Vector2(260, 80)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.858824, 1)
+theme_override_colors/font_focus_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_colors/font_pressed_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_colors/font_hover_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_font_sizes/font_size = 38
+theme_override_styles/normal = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_button_focus")
+theme_override_styles/focus = SubResource("StyleBoxFlat_menu_button_focus")
+text = "Back"
+flat = true
+
+[node name="WaveEditorPanel" type="PanelContainer" parent="MenuRoot" unique_id=210905122]
+visible = false
+custom_minimum_size = Vector2(720, 520)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -260.0
+offset_right = 360.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="MenuRoot/WaveEditorPanel" unique_id=1796533385]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuRoot/WaveEditorPanel/MarginContainer" unique_id=582603073]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer" unique_id=1283732364]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_font_sizes/font_size = 44
+text = "Wave editor"
+horizontal_alignment = 1
+
+[node name="HelpLabel" type="Label" parent="MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer" unique_id=558886116]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.92, 0.92, 0.9)
+theme_override_font_sizes/font_size = 24
+text = "Change values in key=value format and press Apply."
+autowrap_mode = 3
+
+[node name="WaveSettingsText" type="TextEdit" parent="MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer" unique_id=381148350]
+custom_minimum_size = Vector2(0, 320)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+
+[node name="FeedbackLabel" type="Label" parent="MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer" unique_id=2128199939]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer" unique_id=1029586744]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="ApplyButton" type="Button" parent="MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer/Buttons" unique_id=1260378966]
+custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.858824, 1)
+theme_override_colors/font_focus_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_colors/font_pressed_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_colors/font_hover_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_font_sizes/font_size = 34
+theme_override_styles/normal = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_button_focus")
+theme_override_styles/focus = SubResource("StyleBoxFlat_menu_button_focus")
+text = "Apply"
+flat = true
+
+[node name="CloseButton" type="Button" parent="MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer/Buttons" unique_id=1701651209]
+custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.858824, 1)
+theme_override_colors/font_focus_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_colors/font_pressed_color = Color(0.972549, 0.92549, 0.772549, 1)
+theme_override_colors/font_hover_color = Color(1, 0.980392, 0.917647, 1)
+theme_override_font_sizes/font_size = 34
+theme_override_styles/normal = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_menu_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_button_focus")
+theme_override_styles/focus = SubResource("StyleBoxFlat_menu_button_focus")
+text = "Close"
+flat = true
+
+[connection signal="pressed" from="MenuRoot/Panel/MarginContainer/VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="MenuRoot/Panel/MarginContainer/VBoxContainer/AchievementsButton" to="." method="_on_achievements_button_pressed"]
+[connection signal="pressed" from="MenuRoot/Panel/MarginContainer/VBoxContainer/ResumeButton" to="." method="_on_resume_button_pressed"]
+[connection signal="pressed" from="MenuRoot/Panel/MarginContainer/VBoxContainer/RestartButton" to="." method="_on_restart_button_pressed"]
+[connection signal="pressed" from="MenuRoot/Panel/MarginContainer/VBoxContainer/WaveEditorButton" to="." method="_on_wave_editor_button_pressed"]
+[connection signal="pressed" from="MenuRoot/Panel/MarginContainer/VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="MenuRoot/AchievementsPanel/MarginContainer/VBoxContainer/Buttons/ResetButton" to="." method="_on_achievements_reset_button_pressed"]
+[connection signal="pressed" from="MenuRoot/AchievementsPanel/MarginContainer/VBoxContainer/Buttons/CloseButton" to="." method="_on_achievements_close_button_pressed"]
+[connection signal="pressed" from="MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer/Buttons/ApplyButton" to="." method="_on_wave_editor_apply_button_pressed"]
+[connection signal="pressed" from="MenuRoot/WaveEditorPanel/MarginContainer/VBoxContainer/Buttons/CloseButton" to="." method="_on_wave_editor_close_button_pressed"]

@@ -16,9 +16,7 @@ más zombis y más difíciles. Tienes que:
 - **Disparar** con el `Espacio` o el clic del ratón.
 - **Usar power-ups** que sueltan los zombis (granadas, minas, botiquín, orbe de
   teletransporte...).
-- **Sobrevivir** el mayor número de oleadas posible. ¡Hay un zombi jefe sorpresa! 😎
-
-También puedes viajar a tu **base** para construir y guardar tu botín (*loot*).
+- **Sobrevivir** el mayor número de oleadas posible. ¡Hay un zombi jefe sorpresa!
 
 ---
 
