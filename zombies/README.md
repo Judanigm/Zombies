@@ -16,9 +16,7 @@ más zombis y más difíciles. Tienes que:
 - **Disparar** con el `Espacio` o el clic del ratón.
 - **Usar power-ups** que sueltan los zombis (granadas, minas, botiquín, orbe de
   teletransporte...).
-- **Sobrevivir** el mayor número de oleadas posible. ¡Hay un zombi jefe sorpresa! 😎
-
-También puedes viajar a tu **base** para construir y guardar tu botín (*loot*).
+- **Sobrevivir** el mayor número de oleadas posible. ¡Hay un zombi jefe sorpresa!
 
 ---
 
@@ -201,6 +199,13 @@ El juego tiene un **editor de oleadas** dentro del menú:
 - **Sprite:** un dibujo o imagen de un personaje u objeto.
 - **Inspector:** el panel de la derecha en Godot donde cambias propiedades con el ratón.
 - **RGBA:** las 4 partes de un color (Rojo, Verde, Azul, Transparencia).
+
+---
+
+## 📄 Licencia
+
+Este juego es **open source** y se publica bajo la licencia **MIT**. Consulta
+[`LICENSE`](../LICENSE) para ver los términos completos.
 
 ---
 
