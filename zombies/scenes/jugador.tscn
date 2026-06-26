@@ -1,44 +1,15 @@
-[gd_scene format=3]
-
+[gd_scene format=3 uid="uid://bl4n0h5pbox61"]
 
 [ext_resource type="Script" uid="uid://bahsfdhqckxcw" path="res://scripts/player.gd" id="1_player_script"]
-[ext_resource type="Script" uid="uid://bwke1by4jb11o" path="res://scripts/menu.gd" id="2_menu_script"]
-[ext_resource type="Script" uid="uid://bngki5tt00qx6" path="res://scripts/main.gd" id="3_main_script"]
-[ext_resource type="Texture2D" uid="uid://dterdch7vesb4" path="res://assets/Player/mapa_fondo.png" id="3_map_texture"]
-[ext_resource type="Texture2D" uid="uid://d0o67gvdltah2" path="res://assets/Texto/Fondo menu.png" id="3_menu_background"]
 [ext_resource type="Texture2D" uid="uid://bbi8pgvm2cn4r" path="res://assets/Player/Quieto.png" id="3_tipki"]
 [ext_resource type="Texture2D" uid="uid://deex8rcyxru10" path="res://assets/Player/Andar sprite.png" id="4_85g3d"]
 [ext_resource type="Texture2D" uid="uid://dj7q3686htpot" path="res://assets/Player/Shoot down.png" id="4_eb6dy"]
-[ext_resource type="Texture2D" uid="uid://ce3bk2gwm3vej" path="res://assets/Texto/Logo del juego.png" id="4_menu_logo"]
 [ext_resource type="Texture2D" uid="uid://bd2fachioglpy" path="res://assets/Player/Andar izquierda.png" id="5_choun"]
-[ext_resource type="Texture2D" uid="uid://dc53t0vc1se30" path="res://assets/Texto/Fono muerte.png" id="5_death_background"]
 [ext_resource type="Texture2D" uid="uid://c3awpgsjo2nmc" path="res://assets/Player/Shoot left.png" id="5_trceg"]
 [ext_resource type="Texture2D" uid="uid://dbclorm36ad6b" path="res://assets/Player/Shoot right.png" id="6_a8y0u"]
 [ext_resource type="Texture2D" uid="uid://dk6rb65glpfvj" path="res://assets/Player/Andar derecha.png" id="6_ya4ey"]
 [ext_resource type="Texture2D" uid="uid://chfeoid4vgslo" path="res://assets/Player/Andar alante sprite.png" id="7_eb6dy"]
 [ext_resource type="Texture2D" uid="uid://cs1nf1fk5nrcv" path="res://assets/Player/shoot up.png" id="7_jkv2x"]
-[ext_resource type="Texture2D" uid="uid://cp61ss254akuk" path="res://assets/Texto/You-died.png" id="8_game_over_title"]
-[ext_resource type="Texture2D" uid="uid://btevn0rgxf41v" path="res://assets/Texto/Pause.png" id="8_pause_title"]
-[ext_resource type="Texture2D" uid="uid://wb54f5ffm2dq" path="res://assets/Texto/Play.png" id="8_play_button"]
-[ext_resource type="AudioStream" uid="uid://dx6io6dpithyj" path="res://assets/Sonido/Efectos/Muerte.mp3" id="10_death_sound"]
-[ext_resource type="AudioStream" uid="uid://k6hbu6sjtmbb" path="res://assets/Sonido/Música/en el juego.wav" id="11_game_music"]
-[ext_resource type="AudioStream" uid="uid://ko3cyifa50o0" path="res://assets/Sonido/Música/Menu.mp3" id="11_menu_music"]
-[ext_resource type="Texture2D" uid="uid://gbotshvj18ij" path="res://assets/Power ups/Granada/Granada.png" id="12_grenade_icon"]
-[ext_resource type="Texture2D" uid="uid://dekml1y80xm81" path="res://assets/Power ups/Kit médico/Kit médico.png" id="13_medkit_icon"]
-[ext_resource type="Texture2D" uid="uid://bi5qyj70iyov1" path="res://assets/Power ups/Mina/Tirada.png" id="14_mine_icon"]
-[ext_resource type="Texture2D" uid="uid://s3jg7aeqw53i" path="res://assets/Power ups/Orbe de teletransportación/Orbe teletrasportador.png" id="16_teleport_orb_icon"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_horizontal"]
-size = Vector2(2880, 64)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_vertical"]
-size = Vector2(64, 2176)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_rock_a"]
-size = Vector2(72, 52)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_rock_b"]
-size = Vector2(64, 64)
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
 radius = 19.0
@@ -64,21 +35,21 @@ region = Rect2(0, 0, 307, 392)
 atlas = ExtResource("7_jkv2x")
 region = Rect2(0, 0, 307, 392)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_tipki"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_6lqtn"]
 atlas = ExtResource("4_85g3d")
-region = Rect2(0, 0, 447, 608)
+region = Rect2(0, 0, 338, 608)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_85g3d"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_auomn"]
 atlas = ExtResource("4_85g3d")
-region = Rect2(447, 0, 447, 608)
+region = Rect2(338, 0, 338, 608)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_choun"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_pdyqb"]
 atlas = ExtResource("4_85g3d")
-region = Rect2(894, 0, 447, 608)
+region = Rect2(676, 0, 338, 608)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ya4ey"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_2pedm"]
 atlas = ExtResource("4_85g3d")
-region = Rect2(1341, 0, 447, 608)
+region = Rect2(1014, 0, 338, 608)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_eb6dy"]
 atlas = ExtResource("5_choun")
@@ -172,16 +143,16 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_tipki")
+"texture": SubResource("AtlasTexture_6lqtn")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_85g3d")
+"texture": SubResource("AtlasTexture_auomn")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_choun")
+"texture": SubResource("AtlasTexture_pdyqb")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ya4ey")
+"texture": SubResource("AtlasTexture_2pedm")
 }],
 "loop": true,
 "name": &"Walk down",
@@ -239,40 +210,6 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_menu_logo_cropped"]
-atlas = ExtResource("4_menu_logo")
-region = Rect2(49, 190, 766, 335)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_panel"]
-bg_color = Color(0.109804, 0.133333, 0.168627, 0.95)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.972549, 0.92549, 0.772549, 0.35)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-shadow_color = Color(0, 0, 0, 0.35)
-shadow_size = 10
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_menu_button"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_button_focus"]
-bg_color = Color(0.972549, 0.92549, 0.772549, 0.18)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.972549, 0.92549, 0.772549, 0.9)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-shadow_color = Color(0, 0, 0, 0.2)
-shadow_size = 6
-
 [node name="Player" type="CharacterBody2D" unique_id=1586678106]
 z_index = 100
 collision_mask = 3
@@ -311,5 +248,4 @@ position_smoothing_speed = 8.0
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=325127181]
 position = Vector2(0, 14)
 sprite_frames = SubResource("SpriteFrames_fv21b")
-animation = &"Idle"
-
+animation = &"Walk down"
