@@ -1,46 +1,46 @@
 extends CharacterBody2D
 
 signal died
-signal grenade_count_changed(grenade_count: int)
-signal medkit_count_changed(medkit_count: int)
-signal mine_count_changed(mine_count: int)
-signal teleport_orb_count_changed(teleport_orb_count: int)
-signal stamina_changed(stamina: float, max_stamina: float)
+signal grenade_count_changed(cantidad_granadas: int)
+signal medkit_count_changed(cantidad_botiquines: int)
+signal mine_count_changed(cantidad_minas: int)
+signal teleport_orb_count_changed(cantidad_orbes_teletransporte: int)
+signal stamina_changed(resistencia: float, resistencia_maxima: float)
 signal selected_power_up_changed(power_up_id: StringName)
 
-@export var max_speed: float = 170.0
-@export var medkit_boosted_speed: float = 230.0
-@export_range(0.0, 1.0, 0.01) var wounded_move_speed_multiplier: float = 0.65
-@export var sprint_speed_multiplier: float = 1.55
-@export var max_stamina: float = 100.0
-@export var stamina_drain_per_second: float = 34.0
-@export var stamina_recovery_per_second: float = 6.0
-@export_range(0.0, 1.0, 0.01) var wounded_stamina_recovery_multiplier: float = 0.5
-@export_range(0.0, 1.0, 0.01) var wounded_stamina_limit_ratio: float = 0.5
-@export var acceleration: float = 900.0
-@export var friction: float = 1200.0
-@export var fire_rate: float = 0.5
-@export var joypad_mouse_speed: float = 720.0
-@export_range(0.0, 1.0, 0.01) var joypad_mouse_deadzone: float = 0.22
-@export var grenade_throw_offset: float = 26.0
-@export var revive_invulnerability_duration: float = 1.0
-@export var medkit_repel_radius: float = 360.0
-@export var medkit_repel_distance: float = 260.0
-@export var teleport_invulnerability_duration: float = 0.35
-@export var teleport_particles_scale: float = 1.4
-@export var teleport_particles_offset: Vector2 = Vector2(0, 18)
-@export var teleport_particles_animation_speed: float = 10.0
-@export var teleport_particles_color: Color = Color(0.45, 0.85, 1.0, 1.0)
-@export_range(0.1, 2.0, 0.01) var idle_animation_scale: float = 0.62
-@export_range(0.1, 2.0, 0.01) var walk_animation_scale: float = 0.28
-@export_range(0.1, 2.0, 0.01) var shoot_animation_scale: float = 0.36
-@export var shoot_animation_duration: float = 0.12
-@export_range(0.0, 45.0, 0.1) var triple_bullet_spread_degrees: float = 14.0
+@export var velocidad_maxima: float = 170.0
+@export var velocidad_mejorada_botiquin: float = 230.0
+@export_range(0.0, 1.0, 0.01) var multiplicador_velocidad_herido: float = 0.65
+@export var multiplicador_velocidad_sprint: float = 1.55
+@export var resistencia_maxima: float = 100.0
+@export var drenaje_resistencia_por_segundo: float = 34.0
+@export var recuperacion_resistencia_por_segundo: float = 6.0
+@export_range(0.0, 1.0, 0.01) var multiplicador_recuperacion_resistencia_herido: float = 0.5
+@export_range(0.0, 1.0, 0.01) var proporcion_limite_resistencia_herido: float = 0.5
+@export var aceleracion: float = 900.0
+@export var friccion: float = 1200.0
+@export var cadencia_disparo: float = 0.5
+@export var velocidad_raton_mando: float = 720.0
+@export_range(0.0, 1.0, 0.01) var zona_muerta_raton_mando: float = 0.22
+@export var desplazamiento_lanzamiento_granada: float = 26.0
+@export var duracion_invulnerabilidad_revivir: float = 1.0
+@export var radio_repelente_botiquin: float = 360.0
+@export var distancia_repelente_botiquin: float = 260.0
+@export var duracion_invulnerabilidad_teletransporte: float = 0.35
+@export var escala_particulas_teletransporte: float = 1.4
+@export var desplazamiento_particulas_teletransporte: Vector2 = Vector2(0, 18)
+@export var velocidad_animacion_particulas_teletransporte: float = 10.0
+@export var color_particulas_teletransporte: Color = Color(0.45, 0.85, 1.0, 1.0)
+@export_range(0.1, 2.0, 0.01) var escala_animacion_reposo: float = 0.62
+@export_range(0.1, 2.0, 0.01) var escala_animacion_caminar: float = 0.28
+@export_range(0.1, 2.0, 0.01) var escala_animacion_disparo: float = 0.36
+@export var duracion_animacion_disparo: float = 0.12
+@export_range(0.0, 45.0, 0.1) var grados_dispersion_bala_triple: float = 14.0
 
-@onready var body: Polygon2D = $Body
-@onready var shadow: Polygon2D = $Shadow
-@onready var facing_marker: Polygon2D = $FacingMarker
-@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var cuerpo: Polygon2D = $Body
+@onready var sombra: Polygon2D = $Shadow
+@onready var marcador_direccion: Polygon2D = $FacingMarker
+@onready var sprite_animado: AnimatedSprite2D = $AnimatedSprite2D
 
 const BULLET_SCENE := preload("res://scenes/bullet.tscn")
 const THROWN_GRENADE_SCENE := preload("res://scenes/power_ups/thrown_grenade.tscn")
@@ -88,83 +88,84 @@ const POWER_UP_ORDER: Array[StringName] = [
 	POWER_UP_MINE,
 ]
 
-var facing_direction: Vector2 = Vector2.DOWN
-var sprite_rest_position: Vector2 = Vector2(0, -10)
-var walk_time: float = 0.0
-var fire_cooldown: float = 0.0
-var shoot_animation_timer: float = 0.0
-var sprite_frame_offsets: Dictionary = {}
-var sprite_reference_anchor: Vector2 = Vector2.ZERO
-var is_dead: bool = false
-var damage_stage: int = 0
-var stamina: float = 0.0
-var grenade_count: int = 0
-var medkit_count: int = 0
-var mine_count: int = 0
-var teleport_orb_count: int = 0
-var revive_invulnerability_timer: float = 0.0
-var medkit_speed_boost_timer: float = 0.0
-var homing_bullets_timer: float = 0.0
-var anti_cooldown_timer: float = 0.0
-var triple_bullet_timer: float = 0.0
-var teleport_sound_player: AudioStreamPlayer2D = null
-var teleport_particles_frames: SpriteFrames = null
-var selected_power_up_id: StringName = &""
-var joypad_left_trigger_click_pressed: bool = false
+var direccion_mirada: Vector2 = Vector2.DOWN
+var direccion_apuntado: Vector2 = Vector2.DOWN
+var posicion_reposo_sprite: Vector2 = Vector2(0, -10)
+var tiempo_caminata: float = 0.0
+var enfriamiento_disparo: float = 0.0
+var temporizador_animacion_disparo: float = 0.0
+var desplazamientos_frames_sprite: Dictionary = {}
+var ancla_referencia_sprite: Vector2 = Vector2.ZERO
+var esta_muerto: bool = false
+var fase_dano: int = 0
+var resistencia: float = 0.0
+var cantidad_granadas: int = 0
+var cantidad_botiquines: int = 0
+var cantidad_minas: int = 0
+var cantidad_orbes_teletransporte: int = 0
+var temporizador_invulnerabilidad_revivir: float = 0.0
+var temporizador_velocidad_botiquin: float = 0.0
+var temporizador_balas_teledirigidas: float = 0.0
+var temporizador_anti_enfriamiento: float = 0.0
+var temporizador_bala_triple: float = 0.0
+var reproductor_sonido_teletransporte: AudioStreamPlayer2D = null
+var frames_particulas_teletransporte: SpriteFrames = null
+var id_power_up_seleccionado: StringName = &""
+var gatillo_izquierdo_mando_pulsado: bool = false
 
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("player")
-	stamina = max_stamina
+	resistencia = resistencia_maxima
 	_setup_teleport_sound()
-	body.hide()
-	facing_marker.hide()
+	cuerpo.hide()
+	marcador_direccion.hide()
 	_cache_sprite_frame_offsets()
 	_update_animation()
 	_update_visuals()
-	emit_signal("medkit_count_changed", medkit_count)
-	emit_signal("grenade_count_changed", grenade_count)
-	emit_signal("mine_count_changed", mine_count)
-	emit_signal("teleport_orb_count_changed", teleport_orb_count)
+	emit_signal("medkit_count_changed", cantidad_botiquines)
+	emit_signal("grenade_count_changed", cantidad_granadas)
+	emit_signal("mine_count_changed", cantidad_minas)
+	emit_signal("teleport_orb_count_changed", cantidad_orbes_teletransporte)
 	_emit_stamina_changed()
 	_ensure_selected_power_up()
 
 
 func _physics_process(delta: float) -> void:
-	if is_dead:
+	if esta_muerto:
 		velocity = Vector2.ZERO
 		return
 
 	_update_joypad_mouse(delta)
 	_update_joypad_left_trigger_click()
-	revive_invulnerability_timer = maxf(revive_invulnerability_timer - delta, 0.0)
-	medkit_speed_boost_timer = maxf(medkit_speed_boost_timer - delta, 0.0)
-	homing_bullets_timer = maxf(homing_bullets_timer - delta, 0.0)
-	anti_cooldown_timer = maxf(anti_cooldown_timer - delta, 0.0)
-	triple_bullet_timer = maxf(triple_bullet_timer - delta, 0.0)
-	fire_cooldown = maxf(fire_cooldown - delta, 0.0)
-	shoot_animation_timer = maxf(shoot_animation_timer - delta, 0.0)
+	temporizador_invulnerabilidad_revivir = maxf(temporizador_invulnerabilidad_revivir - delta, 0.0)
+	temporizador_velocidad_botiquin = maxf(temporizador_velocidad_botiquin - delta, 0.0)
+	temporizador_balas_teledirigidas = maxf(temporizador_balas_teledirigidas - delta, 0.0)
+	temporizador_anti_enfriamiento = maxf(temporizador_anti_enfriamiento - delta, 0.0)
+	temporizador_bala_triple = maxf(temporizador_bala_triple - delta, 0.0)
+	enfriamiento_disparo = maxf(enfriamiento_disparo - delta, 0.0)
+	temporizador_animacion_disparo = maxf(temporizador_animacion_disparo - delta, 0.0)
 
 	if _locks_movement_for_shooting():
 		velocity = Vector2.ZERO
-		walk_time = 0.0
+		tiempo_caminata = 0.0
 	else:
-		var input_direction := _get_input_direction()
-		var current_move_speed := _get_current_move_speed()
-		var sprinting := _can_sprint(input_direction)
+		var direccion_entrada := _get_input_direction()
+		var velocidad_movimiento_actual := _get_current_move_speed()
+		var corriendo := _can_sprint(direccion_entrada)
 
-		if input_direction != Vector2.ZERO:
-			if sprinting:
-				current_move_speed *= sprint_speed_multiplier
-			velocity = velocity.move_toward(input_direction * current_move_speed, acceleration * delta)
-			facing_direction = input_direction.normalized()
-			walk_time += delta * 10.0
+		if direccion_entrada != Vector2.ZERO:
+			if corriendo:
+				velocidad_movimiento_actual *= multiplicador_velocidad_sprint
+			velocity = velocity.move_toward(direccion_entrada * velocidad_movimiento_actual, aceleracion * delta)
+			direccion_mirada = direccion_entrada.normalized()
+			tiempo_caminata += delta * 10.0
 		else:
-			velocity = velocity.move_toward(Vector2.ZERO, friction * delta)
-			walk_time = 0.0
+			velocity = velocity.move_toward(Vector2.ZERO, friccion * delta)
+			tiempo_caminata = 0.0
 
-		_update_stamina(delta, sprinting)
+		_update_stamina(delta, corriendo)
 
 	if _wants_to_shoot():
 		_shoot()
@@ -175,182 +176,182 @@ func _physics_process(delta: float) -> void:
 
 
 func _get_input_direction() -> Vector2:
-	var input_direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	var direccion_entrada := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 
 	if Input.is_physical_key_pressed(KEY_A):
-		input_direction.x -= 1.0
+		direccion_entrada.x -= 1.0
 	if Input.is_physical_key_pressed(KEY_D):
-		input_direction.x += 1.0
+		direccion_entrada.x += 1.0
 	if Input.is_physical_key_pressed(KEY_W):
-		input_direction.y -= 1.0
+		direccion_entrada.y -= 1.0
 	if Input.is_physical_key_pressed(KEY_S):
-		input_direction.y += 1.0
+		direccion_entrada.y += 1.0
 
-	return input_direction.limit_length(1.0)
+	return direccion_entrada.limit_length(1.0)
 
 
 func _update_visuals() -> void:
-	var bob_offset := 0.0
+	var desplazamiento_balanceo := 0.0
 
 	if velocity.length() > 5.0:
-		bob_offset = sin(walk_time) * 1.5
+		desplazamiento_balanceo = sin(tiempo_caminata) * 1.5
 
-	var current_scale := _get_animation_scale(animated_sprite.animation)
-	animated_sprite.scale = Vector2.ONE * current_scale
-	animated_sprite.position = (
-		sprite_rest_position
-		+ Vector2(0.0, bob_offset)
-		+ sprite_reference_anchor * (1.0 - current_scale)
+	var escala_actual := _get_animation_scale(sprite_animado.animation)
+	sprite_animado.scale = Vector2.ONE * escala_actual
+	sprite_animado.position = (
+		posicion_reposo_sprite
+		+ Vector2(0.0, desplazamiento_balanceo)
+		+ ancla_referencia_sprite * (1.0 - escala_actual)
 	)
-	if revive_invulnerability_timer > 0.0:
-		var blink_phase := sin(Time.get_ticks_msec() * 0.03)
-		animated_sprite.modulate = Color(1.0, 1.0, 1.0, 0.45 if blink_phase > 0.0 else 1.0)
+	if temporizador_invulnerabilidad_revivir > 0.0:
+		var fase_parpadeo := sin(Time.get_ticks_msec() * 0.03)
+		sprite_animado.modulate = Color(1.0, 1.0, 1.0, 0.45 if fase_parpadeo > 0.0 else 1.0)
 	else:
-		animated_sprite.modulate = Color.WHITE
-	shadow.scale = Vector2(1.0 - abs(bob_offset) * 0.015, 1.0 - abs(bob_offset) * 0.03)
+		sprite_animado.modulate = Color.WHITE
+	sombra.scale = Vector2(1.0 - abs(desplazamiento_balanceo) * 0.015, 1.0 - abs(desplazamiento_balanceo) * 0.03)
 	_apply_sprite_frame_offset()
 
 
 func _update_animation() -> void:
-	var next_animation := IDLE_ANIMATION
+	var siguiente_animacion := IDLE_ANIMATION
 
 	if _is_shooting():
-		next_animation = _get_shoot_animation_name(facing_direction)
+		siguiente_animacion = _get_shoot_animation_name(direccion_apuntado)
 	elif velocity.length() > 5.0:
-		next_animation = _get_walk_animation_name(facing_direction)
+		siguiente_animacion = _get_walk_animation_name(direccion_mirada)
 
-	if animated_sprite.animation != next_animation:
-		animated_sprite.play(next_animation)
-	elif not animated_sprite.is_playing():
-		animated_sprite.play()
+	if sprite_animado.animation != siguiente_animacion:
+		sprite_animado.play(siguiente_animacion)
+	elif not sprite_animado.is_playing():
+		sprite_animado.play()
 
 	_apply_sprite_frame_offset()
 
 
-func _get_walk_animation_name(direction: Vector2) -> StringName:
-	if absf(direction.x) > absf(direction.y):
-		return WALK_RIGHT_ANIMATION if direction.x > 0.0 else WALK_LEFT_ANIMATION
+func _get_walk_animation_name(direccion: Vector2) -> StringName:
+	if absf(direccion.x) > absf(direccion.y):
+		return WALK_RIGHT_ANIMATION if direccion.x > 0.0 else WALK_LEFT_ANIMATION
 
-	return WALK_DOWN_ANIMATION if direction.y > 0.0 else WALK_UP_ANIMATION
+	return WALK_DOWN_ANIMATION if direccion.y > 0.0 else WALK_UP_ANIMATION
 
 
-func _get_shoot_animation_name(direction: Vector2) -> StringName:
-	if absf(direction.x) > absf(direction.y):
-		return SHOOT_RIGHT_ANIMATION if direction.x > 0.0 else SHOOT_LEFT_ANIMATION
+func _get_shoot_animation_name(direccion: Vector2) -> StringName:
+	if absf(direccion.x) > absf(direccion.y):
+		return SHOOT_RIGHT_ANIMATION if direccion.x > 0.0 else SHOOT_LEFT_ANIMATION
 
-	return SHOOT_DOWN_ANIMATION if direction.y > 0.0 else SHOOT_UP_ANIMATION
+	return SHOOT_DOWN_ANIMATION if direccion.y > 0.0 else SHOOT_UP_ANIMATION
 
 
 func _cache_sprite_frame_offsets() -> void:
-	sprite_frame_offsets.clear()
+	desplazamientos_frames_sprite.clear()
 
-	if animated_sprite.sprite_frames == null:
+	if sprite_animado.sprite_frames == null:
 		return
 
-	sprite_reference_anchor = _get_frame_anchor(IDLE_ANIMATION, 0)
+	ancla_referencia_sprite = _get_frame_anchor(IDLE_ANIMATION, 0)
 
-	for animation_name in animated_sprite.sprite_frames.get_animation_names():
-		var frame_offsets := {}
-		for frame_index in animated_sprite.sprite_frames.get_frame_count(animation_name):
-			var frame_anchor := _get_frame_anchor(animation_name, frame_index)
-			frame_offsets[frame_index] = sprite_reference_anchor - frame_anchor
-		sprite_frame_offsets[animation_name] = frame_offsets
+	for nombre_animacion in sprite_animado.sprite_frames.get_animation_names():
+		var desplazamientos_frame := {}
+		for indice_frame in sprite_animado.sprite_frames.get_frame_count(nombre_animacion):
+			var frame_anchor := _get_frame_anchor(nombre_animacion, indice_frame)
+			desplazamientos_frame[indice_frame] = ancla_referencia_sprite - frame_anchor
+		desplazamientos_frames_sprite[nombre_animacion] = desplazamientos_frame
 
 
-func _get_frame_anchor(animation_name: StringName, frame_index: int) -> Vector2:
-	var frame_texture := animated_sprite.sprite_frames.get_frame_texture(animation_name, frame_index)
-	if frame_texture == null:
+func _get_frame_anchor(nombre_animacion: StringName, indice_frame: int) -> Vector2:
+	var textura_frame := sprite_animado.sprite_frames.get_frame_texture(nombre_animacion, indice_frame)
+	if textura_frame == null:
 		return Vector2.ZERO
 
-	var frame_image := frame_texture.get_image()
-	if frame_image == null:
+	var imagen_frame := textura_frame.get_image()
+	if imagen_frame == null:
 		return Vector2.ZERO
 
-	var used_rect := frame_image.get_used_rect()
-	if used_rect.size == Vector2i.ZERO:
+	var rect_usado := imagen_frame.get_used_rect()
+	if rect_usado.size == Vector2i.ZERO:
 		return Vector2.ZERO
 
 	return Vector2(
-		used_rect.position.x + used_rect.size.x * 0.5 - frame_image.get_width() * 0.5,
-		used_rect.position.y + used_rect.size.y - frame_image.get_height() * 0.5
+		rect_usado.position.x + rect_usado.size.x * 0.5 - imagen_frame.get_width() * 0.5,
+		rect_usado.position.y + rect_usado.size.y - imagen_frame.get_height() * 0.5
 	)
 
 
 func _apply_sprite_frame_offset() -> void:
-	var frame_offsets: Dictionary = sprite_frame_offsets.get(animated_sprite.animation, {})
-	animated_sprite.offset = frame_offsets.get(animated_sprite.frame, Vector2.ZERO)
+	var desplazamientos_frame: Dictionary = desplazamientos_frames_sprite.get(sprite_animado.animation, {})
+	sprite_animado.offset = desplazamientos_frame.get(sprite_animado.frame, Vector2.ZERO)
 
 
-func _get_animation_scale(animation_name: StringName) -> float:
-	if animation_name == IDLE_ANIMATION:
-		return idle_animation_scale
+func _get_animation_scale(nombre_animacion: StringName) -> float:
+	if nombre_animacion == IDLE_ANIMATION:
+		return escala_animacion_reposo
 	if (
-		animation_name == SHOOT_UP_ANIMATION
-		or animation_name == SHOOT_DOWN_ANIMATION
-		or animation_name == SHOOT_LEFT_ANIMATION
-		or animation_name == SHOOT_RIGHT_ANIMATION
+		nombre_animacion == SHOOT_UP_ANIMATION
+		or nombre_animacion == SHOOT_DOWN_ANIMATION
+		or nombre_animacion == SHOOT_LEFT_ANIMATION
+		or nombre_animacion == SHOOT_RIGHT_ANIMATION
 	):
-		return shoot_animation_scale
-	return walk_animation_scale
+		return escala_animacion_disparo
+	return escala_animacion_caminar
 
 
 func _is_shooting() -> bool:
-	return shoot_animation_timer > 0.0
+	return temporizador_animacion_disparo > 0.0
 
 
 func _locks_movement_for_shooting() -> bool:
-	return shoot_animation_timer > 0.0 and anti_cooldown_timer <= 0.0
+	return temporizador_animacion_disparo > 0.0 and temporizador_anti_enfriamiento <= 0.0
 
 
-func _can_sprint(input_direction: Vector2) -> bool:
+func _can_sprint(direccion_entrada: Vector2) -> bool:
 	return (
-		input_direction != Vector2.ZERO
-		and stamina > 0.0
+		direccion_entrada != Vector2.ZERO
+		and resistencia > 0.0
 		and _is_sprint_input_pressed()
 	)
 
 
 func _get_current_move_speed() -> float:
-	if medkit_speed_boost_timer > 0.0:
-		return medkit_boosted_speed
-	if damage_stage >= SECOND_HIT_DAMAGE_STAGE:
-		return max_speed * wounded_move_speed_multiplier
-	return max_speed
+	if temporizador_velocidad_botiquin > 0.0:
+		return velocidad_mejorada_botiquin
+	if fase_dano >= SECOND_HIT_DAMAGE_STAGE:
+		return velocidad_maxima * multiplicador_velocidad_herido
+	return velocidad_maxima
 
 
-func _update_stamina(delta: float, sprinting: bool) -> void:
-	var previous_stamina := stamina
-	var stamina_limit := _get_current_stamina_limit()
-	if sprinting:
-		stamina = maxf(stamina - stamina_drain_per_second * delta, 0.0)
+func _update_stamina(delta: float, corriendo: bool) -> void:
+	var resistencia_anterior := resistencia
+	var limite_resistencia := _get_current_stamina_limit()
+	if corriendo:
+		resistencia = maxf(resistencia - drenaje_resistencia_por_segundo * delta, 0.0)
 	elif not _is_sprint_input_pressed():
-		stamina = minf(stamina + _get_current_stamina_recovery_per_second() * delta, stamina_limit)
+		resistencia = minf(resistencia + _get_current_stamina_recovery_per_second() * delta, limite_resistencia)
 
-	if stamina > stamina_limit:
-		stamina = stamina_limit
+	if resistencia > limite_resistencia:
+		resistencia = limite_resistencia
 
-	if not is_equal_approx(previous_stamina, stamina):
+	if not is_equal_approx(resistencia_anterior, resistencia):
 		_emit_stamina_changed()
 
 
 func _get_current_stamina_recovery_per_second() -> float:
-	if damage_stage >= FIRST_HIT_DAMAGE_STAGE:
-		return stamina_recovery_per_second * wounded_stamina_recovery_multiplier
-	return stamina_recovery_per_second
+	if fase_dano >= FIRST_HIT_DAMAGE_STAGE:
+		return recuperacion_resistencia_por_segundo * multiplicador_recuperacion_resistencia_herido
+	return recuperacion_resistencia_por_segundo
 
 
 func _get_current_stamina_limit() -> float:
-	if damage_stage >= SECOND_HIT_DAMAGE_STAGE:
-		return max_stamina * wounded_stamina_limit_ratio
-	return max_stamina
+	if fase_dano >= SECOND_HIT_DAMAGE_STAGE:
+		return resistencia_maxima * proporcion_limite_resistencia_herido
+	return resistencia_maxima
 
 
 func _emit_stamina_changed() -> void:
-	emit_signal("stamina_changed", stamina, max_stamina)
+	emit_signal("stamina_changed", resistencia, resistencia_maxima)
 
 
 func _wants_to_shoot() -> bool:
-	if fire_cooldown > 0.0 and anti_cooldown_timer <= 0.0:
+	if enfriamiento_disparo > 0.0 and temporizador_anti_enfriamiento <= 0.0:
 		return false
 
 	return (
@@ -383,99 +384,116 @@ func _is_sprint_input_pressed() -> bool:
 
 
 func _update_joypad_mouse(delta: float) -> void:
-	var mouse_direction := Vector2.ZERO
+	var direccion_raton := Vector2.ZERO
 	for device_id in Input.get_connected_joypads():
-		var right_stick := Vector2(
+		var stick_derecho := Vector2(
 			Input.get_joy_axis(device_id, JOY_AXIS_RIGHT_X),
 			Input.get_joy_axis(device_id, JOY_AXIS_RIGHT_Y)
 		)
-		if right_stick.length() > mouse_direction.length():
-			mouse_direction = right_stick
+		if stick_derecho.length() > direccion_raton.length():
+			direccion_raton = stick_derecho
 
-	if mouse_direction.length() <= joypad_mouse_deadzone:
+	if direccion_raton.length() <= zona_muerta_raton_mando:
 		return
 
-	var strength := inverse_lerp(joypad_mouse_deadzone, 1.0, minf(mouse_direction.length(), 1.0))
+	var fuerza := inverse_lerp(zona_muerta_raton_mando, 1.0, minf(direccion_raton.length(), 1.0))
 	var viewport := get_viewport()
-	var viewport_size := viewport.get_visible_rect().size
-	var next_mouse_position := (
+	var tamano_viewport := viewport.get_visible_rect().size
+	var siguiente_posicion_raton := (
 		viewport.get_mouse_position()
-		+ mouse_direction.normalized() * joypad_mouse_speed * strength * delta
+		+ direccion_raton.normalized() * velocidad_raton_mando * fuerza * delta
 	)
-	next_mouse_position.x = clampf(next_mouse_position.x, 0.0, viewport_size.x)
-	next_mouse_position.y = clampf(next_mouse_position.y, 0.0, viewport_size.y)
-	Input.warp_mouse(next_mouse_position)
+	siguiente_posicion_raton.x = clampf(siguiente_posicion_raton.x, 0.0, tamano_viewport.x)
+	siguiente_posicion_raton.y = clampf(siguiente_posicion_raton.y, 0.0, tamano_viewport.y)
+	Input.warp_mouse(siguiente_posicion_raton)
 
 
 func _update_joypad_left_trigger_click() -> void:
-	var pressed := false
+	var pulsado := false
 	for device_id in Input.get_connected_joypads():
 		if Input.get_joy_axis(device_id, JOY_AXIS_TRIGGER_LEFT) >= CLICK_JOYPAD_TRIGGER_THRESHOLD:
-			pressed = true
+			pulsado = true
 			break
 
-	if pressed == joypad_left_trigger_click_pressed:
+	if pulsado == gatillo_izquierdo_mando_pulsado:
 		return
 
-	joypad_left_trigger_click_pressed = pressed
-	_send_left_mouse_button_event(pressed)
+	gatillo_izquierdo_mando_pulsado = pulsado
+	_send_left_mouse_button_event(pulsado)
 
 
-func _send_left_mouse_button_event(pressed: bool) -> void:
-	var mouse_event := InputEventMouseButton.new()
-	mouse_event.button_index = MOUSE_BUTTON_LEFT
-	mouse_event.pressed = pressed
-	mouse_event.position = get_viewport().get_mouse_position()
-	mouse_event.global_position = mouse_event.position
-	Input.parse_input_event(mouse_event)
+func _send_left_mouse_button_event(pulsado: bool) -> void:
+	var evento_raton := InputEventMouseButton.new()
+	evento_raton.button_index = MOUSE_BUTTON_LEFT
+	evento_raton.pressed = pulsado
+	evento_raton.position = get_viewport().get_mouse_position()
+	evento_raton.global_position = evento_raton.position
+	Input.parse_input_event(evento_raton)
 
 
 func _shoot() -> void:
-	fire_cooldown = 0.0 if anti_cooldown_timer > 0.0 else fire_rate
-	shoot_animation_timer = shoot_animation_duration
-	if anti_cooldown_timer <= 0.0:
+	enfriamiento_disparo = 0.0 if temporizador_anti_enfriamiento > 0.0 else cadencia_disparo
+	temporizador_animacion_disparo = duracion_animacion_disparo
+	if temporizador_anti_enfriamiento <= 0.0:
 		velocity = Vector2.ZERO
-	var homing_active := homing_bullets_timer > 0.0
-	var achievement_eligible := _is_clean_shot_for_achievement()
-	var shot_direction := facing_direction
-	if homing_active:
-		var target_direction := _get_direction_to_nearest_zombie()
-		if target_direction != Vector2.ZERO:
-			shot_direction = target_direction
-			facing_direction = target_direction
+	var teledirigidas_activas := temporizador_balas_teledirigidas > 0.0
+	var apto_logro := _is_clean_shot_for_achievement()
+	var direccion_disparo := _obtener_direccion_disparo()
+	if teledirigidas_activas:
+		var direccion_objetivo := _get_direction_to_nearest_zombie()
+		if direccion_objetivo != Vector2.ZERO:
+			direccion_disparo = direccion_objetivo
+			direccion_apuntado = direccion_objetivo
+			direccion_mirada = direccion_objetivo
 
-	if triple_bullet_timer > 0.0:
-		var spread_radians := deg_to_rad(triple_bullet_spread_degrees)
-		_spawn_bullet(shot_direction.rotated(-spread_radians), homing_active, achievement_eligible)
-		_spawn_bullet(shot_direction, homing_active, achievement_eligible)
-		_spawn_bullet(shot_direction.rotated(spread_radians), homing_active, achievement_eligible)
+	if temporizador_bala_triple > 0.0:
+		var dispersion_radianes := deg_to_rad(grados_dispersion_bala_triple)
+		_spawn_bullet(direccion_disparo.rotated(-dispersion_radianes), teledirigidas_activas, apto_logro)
+		_spawn_bullet(direccion_disparo, teledirigidas_activas, apto_logro)
+		_spawn_bullet(direccion_disparo.rotated(dispersion_radianes), teledirigidas_activas, apto_logro)
 		return
 
-	_spawn_bullet(shot_direction, homing_active, achievement_eligible)
+	_spawn_bullet(direccion_disparo, teledirigidas_activas, apto_logro)
 
 
-func _spawn_bullet(shot_direction: Vector2, homing_active: bool, achievement_eligible: bool) -> void:
-	var bullet := BULLET_SCENE.instantiate()
-	get_tree().current_scene.add_child(bullet)
-	bullet.setup(
+func _obtener_direccion_disparo() -> Vector2:
+	var direccion_disparo := global_position.direction_to(get_global_mouse_position())
+	if direccion_disparo == Vector2.ZERO:
+		direccion_disparo = direccion_mirada
+	if direccion_disparo == Vector2.ZERO:
+		direccion_disparo = Vector2.DOWN
+
+	direccion_apuntado = direccion_disparo.normalized()
+	direccion_mirada = direccion_apuntado
+	return direccion_apuntado
+
+
+func _spawn_bullet(direccion_disparo: Vector2, teledirigidas_activas: bool, apto_logro: bool) -> void:
+	var raiz_escena := get_tree().current_scene
+	if raiz_escena == null:
+		raiz_escena = get_tree().root
+
+	var bala := BULLET_SCENE.instantiate()
+	raiz_escena.add_child(bala)
+	bala.setup(
 		global_position,
-		shot_direction,
+		direccion_disparo,
 		self,
-		homing_active,
-		achievement_eligible
+		teledirigidas_activas,
+		apto_logro
 	)
 
 
 func _is_clean_shot_for_achievement() -> bool:
 	return (
-		homing_bullets_timer <= 0.0
-		and anti_cooldown_timer <= 0.0
-		and triple_bullet_timer <= 0.0
+		temporizador_balas_teledirigidas <= 0.0
+		and temporizador_anti_enfriamiento <= 0.0
+		and temporizador_bala_triple <= 0.0
 	)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if is_dead:
+	if esta_muerto:
 		return
 
 	if _is_power_up_joypad_event(event):
@@ -489,8 +507,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventMouseButton:
-		var mouse_event := event as InputEventMouseButton
-		if mouse_event.button_index == MOUSE_BUTTON_RIGHT and mouse_event.pressed and not mouse_event.is_echo():
+		var evento_raton := event as InputEventMouseButton
+		if evento_raton.button_index == MOUSE_BUTTON_RIGHT and evento_raton.pressed and not evento_raton.is_echo():
 			_throw_grenade()
 		return
 
@@ -538,23 +556,23 @@ func _get_power_up_selection_step(event: InputEvent) -> int:
 
 
 func _select_power_up(step: int) -> void:
-	var available_power_ups := _get_available_power_up_ids()
-	if available_power_ups.is_empty():
+	var power_ups_disponibles := _get_available_power_up_ids()
+	if power_ups_disponibles.is_empty():
 		_set_selected_power_up(&"")
 		return
 
-	var current_index := available_power_ups.find(selected_power_up_id)
-	if current_index < 0:
-		current_index = 0 if step >= 0 else available_power_ups.size() - 1
+	var indice_actual := power_ups_disponibles.find(id_power_up_seleccionado)
+	if indice_actual < 0:
+		indice_actual = 0 if step >= 0 else power_ups_disponibles.size() - 1
 	else:
-		current_index = wrapi(current_index + step, 0, available_power_ups.size())
-	_set_selected_power_up(available_power_ups[current_index])
+		indice_actual = wrapi(indice_actual + step, 0, power_ups_disponibles.size())
+	_set_selected_power_up(power_ups_disponibles[indice_actual])
 
 
 func _activate_selected_power_up() -> void:
 	_ensure_selected_power_up()
 
-	match selected_power_up_id:
+	match id_power_up_seleccionado:
 		POWER_UP_MEDKIT:
 			_use_medkit()
 		POWER_UP_TELEPORT_ORB:
@@ -566,269 +584,269 @@ func _activate_selected_power_up() -> void:
 
 
 func _ensure_selected_power_up() -> void:
-	if _has_power_up(selected_power_up_id):
-		_set_selected_power_up(selected_power_up_id)
+	if _has_power_up(id_power_up_seleccionado):
+		_set_selected_power_up(id_power_up_seleccionado)
 		return
 
-	var available_power_ups := _get_available_power_up_ids()
-	_set_selected_power_up(&"" if available_power_ups.is_empty() else available_power_ups[0])
+	var power_ups_disponibles := _get_available_power_up_ids()
+	_set_selected_power_up(&"" if power_ups_disponibles.is_empty() else power_ups_disponibles[0])
 
 
 func _get_available_power_up_ids() -> Array[StringName]:
-	var available_power_ups: Array[StringName] = []
+	var power_ups_disponibles: Array[StringName] = []
 	for power_up_id in POWER_UP_ORDER:
 		if _has_power_up(power_up_id):
-			available_power_ups.append(power_up_id)
-	return available_power_ups
+			power_ups_disponibles.append(power_up_id)
+	return power_ups_disponibles
 
 
 func _has_power_up(power_up_id: StringName) -> bool:
 	match power_up_id:
 		POWER_UP_MEDKIT:
-			return medkit_count > 0
+			return cantidad_botiquines > 0
 		POWER_UP_TELEPORT_ORB:
-			return teleport_orb_count > 0
+			return cantidad_orbes_teletransporte > 0
 		POWER_UP_GRENADE:
-			return grenade_count > 0
+			return cantidad_granadas > 0
 		POWER_UP_MINE:
-			return mine_count > 0
+			return cantidad_minas > 0
 	return false
 
 
 func _set_selected_power_up(power_up_id: StringName) -> void:
-	if selected_power_up_id == power_up_id:
-		emit_signal("selected_power_up_changed", selected_power_up_id)
+	if id_power_up_seleccionado == power_up_id:
+		emit_signal("selected_power_up_changed", id_power_up_seleccionado)
 		return
 
-	selected_power_up_id = power_up_id
-	emit_signal("selected_power_up_changed", selected_power_up_id)
+	id_power_up_seleccionado = power_up_id
+	emit_signal("selected_power_up_changed", id_power_up_seleccionado)
 
 
 func add_grenades(amount: int = 1) -> void:
-	grenade_count = maxi(grenade_count + amount, 0)
-	emit_signal("grenade_count_changed", grenade_count)
+	cantidad_granadas = maxi(cantidad_granadas + amount, 0)
+	emit_signal("grenade_count_changed", cantidad_granadas)
 	_register_grenade_stock_for_achievement()
 	_ensure_selected_power_up()
 
 
 func add_mines(amount: int = 1) -> int:
-	if is_dead or amount <= 0:
+	if esta_muerto or amount <= 0:
 		return 0
 
-	mine_count += amount
-	emit_signal("mine_count_changed", mine_count)
+	cantidad_minas += amount
+	emit_signal("mine_count_changed", cantidad_minas)
 	_ensure_selected_power_up()
 	return amount
 
 
 func add_teleport_orbs(amount: int = 1) -> int:
-	if is_dead or amount <= 0:
+	if esta_muerto or amount <= 0:
 		return 0
 
-	teleport_orb_count += amount
-	emit_signal("teleport_orb_count_changed", teleport_orb_count)
+	cantidad_orbes_teletransporte += amount
+	emit_signal("teleport_orb_count_changed", cantidad_orbes_teletransporte)
 	_ensure_selected_power_up()
 	return amount
 
 
 func add_medkit(amount: int = 1) -> int:
-	if is_dead or amount <= 0:
+	if esta_muerto or amount <= 0:
 		return 0
 
-	var previous_count := medkit_count
-	medkit_count = mini(medkit_count + amount, 1)
-	var added_amount := medkit_count - previous_count
-	if added_amount > 0:
-		emit_signal("medkit_count_changed", medkit_count)
+	var cantidad_anterior := cantidad_botiquines
+	cantidad_botiquines = mini(cantidad_botiquines + amount, 1)
+	var cantidad_agregada := cantidad_botiquines - cantidad_anterior
+	if cantidad_agregada > 0:
+		emit_signal("medkit_count_changed", cantidad_botiquines)
 		_ensure_selected_power_up()
-	return added_amount
+	return cantidad_agregada
 
 
 func activate_homing_bullets(duration: float = 7.0) -> void:
-	if is_dead or duration <= 0.0:
+	if esta_muerto or duration <= 0.0:
 		return
 
-	homing_bullets_timer = duration
+	temporizador_balas_teledirigidas = duration
 
 
 func activate_anti_cooldown(duration: float = 7.0) -> void:
-	if is_dead or duration <= 0.0:
+	if esta_muerto or duration <= 0.0:
 		return
 
-	anti_cooldown_timer = duration
-	fire_cooldown = 0.0
+	temporizador_anti_enfriamiento = duration
+	enfriamiento_disparo = 0.0
 
 
 func activate_triple_bullet(duration: float = 7.0) -> void:
-	if is_dead or duration <= 0.0:
+	if esta_muerto or duration <= 0.0:
 		return
 
-	triple_bullet_timer = duration
+	temporizador_bala_triple = duration
 
 
 func has_anti_cooldown() -> bool:
-	return anti_cooldown_timer > 0.0
+	return temporizador_anti_enfriamiento > 0.0
 
 
 func has_triple_bullet() -> bool:
-	return triple_bullet_timer > 0.0
+	return temporizador_bala_triple > 0.0
 
 
 func has_homing_bullets() -> bool:
-	return homing_bullets_timer > 0.0
+	return temporizador_balas_teledirigidas > 0.0
 
 
 func get_medkit_count() -> int:
-	return medkit_count
+	return cantidad_botiquines
 
 
 func get_mine_count() -> int:
-	return mine_count
+	return cantidad_minas
 
 
 func get_teleport_orb_count() -> int:
-	return teleport_orb_count
+	return cantidad_orbes_teletransporte
 
 
 func get_stamina() -> float:
-	return stamina
+	return resistencia
 
 
 func get_max_stamina() -> float:
-	return max_stamina
+	return resistencia_maxima
 
 
 func take_damage(_amount: int = 1) -> void:
-	if is_dead or revive_invulnerability_timer > 0.0:
+	if esta_muerto or temporizador_invulnerabilidad_revivir > 0.0:
 		return
 
 	_receive_hit()
 
 
 func get_grenade_count() -> int:
-	return grenade_count
+	return cantidad_granadas
 
 
 func _get_direction_to_nearest_zombie() -> Vector2:
-	var nearest_direction := Vector2.ZERO
-	var nearest_distance := INF
+	var direccion_mas_cercana := Vector2.ZERO
+	var distancia_mas_cercana := INF
 
 	for zombie in get_tree().get_nodes_in_group("zombies"):
 		if not is_instance_valid(zombie) or not (zombie is Node2D):
 			continue
 
-		var zombie_node := zombie as Node2D
-		var offset := zombie_node.global_position - global_position
-		var distance := offset.length()
-		if distance == 0.0 or distance >= nearest_distance:
+		var nodo_zombie := zombie as Node2D
+		var desplazamiento := nodo_zombie.global_position - global_position
+		var distancia := desplazamiento.length()
+		if distancia == 0.0 or distancia >= distancia_mas_cercana:
 			continue
 
-		nearest_distance = distance
-		nearest_direction = offset / distance
+		distancia_mas_cercana = distancia
+		direccion_mas_cercana = desplazamiento / distancia
 
-	return nearest_direction
+	return direccion_mas_cercana
 
 
 func _place_mine() -> void:
-	if mine_count <= 0:
+	if cantidad_minas <= 0:
 		return
 
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		scene_root = get_tree().root
+	var raiz_escena := get_tree().current_scene
+	if raiz_escena == null:
+		raiz_escena = get_tree().root
 
-	var mine := PLACED_MINE_SCENE.instantiate()
-	scene_root.add_child(mine)
-	mine.global_position = global_position
-	mine_count -= 1
-	emit_signal("mine_count_changed", mine_count)
+	var mina := PLACED_MINE_SCENE.instantiate()
+	raiz_escena.add_child(mina)
+	mina.global_position = global_position
+	cantidad_minas -= 1
+	emit_signal("mine_count_changed", cantidad_minas)
 	_ensure_selected_power_up()
 
 
 func _throw_grenade() -> void:
-	if grenade_count <= 0:
+	if cantidad_granadas <= 0:
 		return
 
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		scene_root = get_tree().root
+	var raiz_escena := get_tree().current_scene
+	if raiz_escena == null:
+		raiz_escena = get_tree().root
 
-	var target_position := get_global_mouse_position()
-	var throw_direction := global_position.direction_to(target_position)
-	if throw_direction == Vector2.ZERO:
-		throw_direction = facing_direction
+	var posicion_objetivo := get_global_mouse_position()
+	var direccion_lanzamiento := global_position.direction_to(posicion_objetivo)
+	if direccion_lanzamiento == Vector2.ZERO:
+		direccion_lanzamiento = direccion_mirada
 
-	var grenade := THROWN_GRENADE_SCENE.instantiate()
-	scene_root.add_child(grenade)
-	grenade.setup(
-		global_position + throw_direction * grenade_throw_offset,
-		target_position
+	var granada := THROWN_GRENADE_SCENE.instantiate()
+	raiz_escena.add_child(granada)
+	granada.setup(
+		global_position + direccion_lanzamiento * desplazamiento_lanzamiento_granada,
+		posicion_objetivo
 	)
-	grenade_count -= 1
-	emit_signal("grenade_count_changed", grenade_count)
+	cantidad_granadas -= 1
+	emit_signal("grenade_count_changed", cantidad_granadas)
 	_ensure_selected_power_up()
 
 
 func _use_teleport_orb() -> void:
-	if teleport_orb_count <= 0:
+	if cantidad_orbes_teletransporte <= 0:
 		return
 
-	var scene_root := get_tree().current_scene
-	if scene_root == null or not scene_root.has_method("get_safe_teleport_position"):
+	var raiz_escena := get_tree().current_scene
+	if raiz_escena == null or not raiz_escena.has_method("get_safe_teleport_position"):
 		return
 
-	var target_position_variant: Variant = scene_root.call("get_safe_teleport_position", global_position)
-	if typeof(target_position_variant) != TYPE_VECTOR2:
+	var variante_posicion_objetivo: Variant = raiz_escena.call("get_safe_teleport_position", global_position)
+	if typeof(variante_posicion_objetivo) != TYPE_VECTOR2:
 		return
 
-	var target_position := target_position_variant as Vector2
-	if target_position.distance_to(global_position) < 24.0:
+	var posicion_objetivo := variante_posicion_objetivo as Vector2
+	if posicion_objetivo.distance_to(global_position) < 24.0:
 		return
 
-	var start_position := global_position
-	global_position = target_position
+	var posicion_inicial := global_position
+	global_position = posicion_objetivo
 	velocity = Vector2.ZERO
-	walk_time = 0.0
-	shoot_animation_timer = 0.0
-	revive_invulnerability_timer = maxf(revive_invulnerability_timer, teleport_invulnerability_duration)
-	teleport_orb_count -= 1
-	emit_signal("teleport_orb_count_changed", teleport_orb_count)
+	tiempo_caminata = 0.0
+	temporizador_animacion_disparo = 0.0
+	temporizador_invulnerabilidad_revivir = maxf(temporizador_invulnerabilidad_revivir, duracion_invulnerabilidad_teletransporte)
+	cantidad_orbes_teletransporte -= 1
+	emit_signal("teleport_orb_count_changed", cantidad_orbes_teletransporte)
 	_ensure_selected_power_up()
 	_play_teleport_rumble()
 	_play_teleport_sound()
-	_spawn_teleport_particles(start_position)
-	_spawn_teleport_particles(target_position)
+	_spawn_teleport_particles(posicion_inicial)
+	_spawn_teleport_particles(posicion_objetivo)
 	_update_animation()
 	_update_visuals()
 
 
 func _use_medkit() -> void:
-	if medkit_count <= 0 or damage_stage == 0:
+	if cantidad_botiquines <= 0 or fase_dano == 0:
 		return
 
-	medkit_count -= 1
-	damage_stage = 0
-	stamina = max_stamina
-	revive_invulnerability_timer = revive_invulnerability_duration
-	medkit_speed_boost_timer = revive_invulnerability_duration
+	cantidad_botiquines -= 1
+	fase_dano = 0
+	resistencia = resistencia_maxima
+	temporizador_invulnerabilidad_revivir = duracion_invulnerabilidad_revivir
+	temporizador_velocidad_botiquin = duracion_invulnerabilidad_revivir
 	_repel_nearby_zombies_with_medkit()
-	emit_signal("medkit_count_changed", medkit_count)
+	emit_signal("medkit_count_changed", cantidad_botiquines)
 	_emit_stamina_changed()
 	_ensure_selected_power_up()
 
 
 func _setup_teleport_sound() -> void:
-	teleport_sound_player = AudioStreamPlayer2D.new()
-	teleport_sound_player.stream = TELEPORT_SOUND
-	add_child(teleport_sound_player)
+	reproductor_sonido_teletransporte = AudioStreamPlayer2D.new()
+	reproductor_sonido_teletransporte.stream = TELEPORT_SOUND
+	add_child(reproductor_sonido_teletransporte)
 
 
 func _play_teleport_sound() -> void:
-	if teleport_sound_player == null or teleport_sound_player.stream == null:
+	if reproductor_sonido_teletransporte == null or reproductor_sonido_teletransporte.stream == null:
 		return
-	if teleport_sound_player.playing:
-		teleport_sound_player.stop()
-	teleport_sound_player.play()
+	if reproductor_sonido_teletransporte.playing:
+		reproductor_sonido_teletransporte.stop()
+	reproductor_sonido_teletransporte.play()
 
 
 func _play_teleport_rumble() -> void:
@@ -837,151 +855,151 @@ func _play_teleport_rumble() -> void:
 		Input.start_joy_vibration(device_id, TELEPORT_RUMBLE_WEAK, TELEPORT_RUMBLE_STRONG, TELEPORT_RUMBLE_DURATION)
 
 
-func _spawn_teleport_particles(effect_position: Vector2) -> void:
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		scene_root = get_tree().root
+func _spawn_teleport_particles(posicion_efecto: Vector2) -> void:
+	var raiz_escena := get_tree().current_scene
+	if raiz_escena == null:
+		raiz_escena = get_tree().root
 
-	var final_position := effect_position + teleport_particles_offset
+	var posicion_final := posicion_efecto + desplazamiento_particulas_teletransporte
 
-	if teleport_particles_frames == null:
-		teleport_particles_frames = _build_teleport_particles_sprite_frames()
-	if teleport_particles_frames == null:
+	if frames_particulas_teletransporte == null:
+		frames_particulas_teletransporte = _build_teleport_particles_sprite_frames()
+	if frames_particulas_teletransporte == null:
 		return
 
-	var particles := AnimatedSprite2D.new()
-	particles.name = "TeleportParticles"
-	particles.sprite_frames = teleport_particles_frames
-	particles.animation = TELEPORT_PARTICLES_ANIMATION
-	particles.scale = Vector2.ONE * teleport_particles_scale
-	particles.z_index = z_index + 4
-	particles.animation_finished.connect(particles.queue_free)
-	scene_root.add_child(particles)
-	particles.global_position = final_position
-	particles.play(TELEPORT_PARTICLES_ANIMATION)
+	var particulas := AnimatedSprite2D.new()
+	particulas.name = "TeleportParticles"
+	particulas.sprite_frames = frames_particulas_teletransporte
+	particulas.animation = TELEPORT_PARTICLES_ANIMATION
+	particulas.scale = Vector2.ONE * escala_particulas_teletransporte
+	particulas.z_index = z_index + 4
+	particulas.animation_finished.connect(particulas.queue_free)
+	raiz_escena.add_child(particulas)
+	particulas.global_position = posicion_final
+	particulas.play(TELEPORT_PARTICLES_ANIMATION)
 
 
 func _build_teleport_particles_sprite_frames() -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	frames.add_animation(TELEPORT_PARTICLES_ANIMATION)
 	frames.set_animation_loop(TELEPORT_PARTICLES_ANIMATION, false)
-	frames.set_animation_speed(TELEPORT_PARTICLES_ANIMATION, teleport_particles_animation_speed)
+	frames.set_animation_speed(TELEPORT_PARTICLES_ANIMATION, velocidad_animacion_particulas_teletransporte)
 
-	var texture_size := TELEPORT_PARTICLES_TEXTURE.get_size()
-	var frame_width := int(texture_size.x / TELEPORT_PARTICLES_COLUMNS)
-	var frame_height := int(texture_size.y / TELEPORT_PARTICLES_ROWS)
-	var particles_texture: Texture2D = TELEPORT_PARTICLES_TEXTURE
-	var visible_regions: Array[Rect2] = []
-	var source_image := TELEPORT_PARTICLES_TEXTURE.get_image()
+	var tamano_textura := TELEPORT_PARTICLES_TEXTURE.get_size()
+	var ancho_frame := int(tamano_textura.x / TELEPORT_PARTICLES_COLUMNS)
+	var alto_frame := int(tamano_textura.y / TELEPORT_PARTICLES_ROWS)
+	var textura_particulas: Texture2D = TELEPORT_PARTICLES_TEXTURE
+	var regiones_visibles: Array[Rect2] = []
+	var imagen_origen := TELEPORT_PARTICLES_TEXTURE.get_image()
 
-	if source_image != null:
-		particles_texture = _build_visible_teleport_particles_texture(source_image)
-		for row in range(TELEPORT_PARTICLES_ROWS):
-			for column in range(TELEPORT_PARTICLES_COLUMNS):
-				var cell_position := Vector2i(column * frame_width, row * frame_height)
-				var cell_image := source_image.get_region(Rect2i(cell_position, Vector2i(frame_width, frame_height)))
-				var used_rect := cell_image.get_used_rect()
-				if used_rect.size == Vector2i.ZERO:
+	if imagen_origen != null:
+		textura_particulas = _build_visible_teleport_particles_texture(imagen_origen)
+		for fila in range(TELEPORT_PARTICLES_ROWS):
+			for columna in range(TELEPORT_PARTICLES_COLUMNS):
+				var posicion_celda := Vector2i(columna * ancho_frame, fila * alto_frame)
+				var imagen_celda := imagen_origen.get_region(Rect2i(posicion_celda, Vector2i(ancho_frame, alto_frame)))
+				var rect_usado := imagen_celda.get_used_rect()
+				if rect_usado.size == Vector2i.ZERO:
 					continue
 
-				visible_regions.append(Rect2(
-					Vector2(cell_position.x, cell_position.y),
-					Vector2(frame_width, frame_height)
+				regiones_visibles.append(Rect2(
+					Vector2(posicion_celda.x, posicion_celda.y),
+					Vector2(ancho_frame, alto_frame)
 				))
 
-	if visible_regions.is_empty():
-		for row in range(TELEPORT_PARTICLES_ROWS):
-			for column in range(TELEPORT_PARTICLES_COLUMNS):
-				visible_regions.append(Rect2(
-					column * frame_width,
-					row * frame_height,
-					frame_width,
-					frame_height
+	if regiones_visibles.is_empty():
+		for fila in range(TELEPORT_PARTICLES_ROWS):
+			for columna in range(TELEPORT_PARTICLES_COLUMNS):
+				regiones_visibles.append(Rect2(
+					columna * ancho_frame,
+					fila * alto_frame,
+					ancho_frame,
+					alto_frame
 				))
 
-	var repeats := TELEPORT_PARTICLES_MIN_VISIBLE_FRAMES if visible_regions.size() == 1 else 1
-	for region in visible_regions:
-		for _repeat in range(repeats):
-			var atlas_texture := AtlasTexture.new()
-			atlas_texture.atlas = particles_texture
-			atlas_texture.region = region
-			frames.add_frame(TELEPORT_PARTICLES_ANIMATION, atlas_texture)
+	var repeticiones := TELEPORT_PARTICLES_MIN_VISIBLE_FRAMES if regiones_visibles.size() == 1 else 1
+	for region in regiones_visibles:
+		for _repeat in range(repeticiones):
+			var textura_atlas := AtlasTexture.new()
+			textura_atlas.atlas = textura_particulas
+			textura_atlas.region = region
+			frames.add_frame(TELEPORT_PARTICLES_ANIMATION, textura_atlas)
 
 	return frames
 
 
-func _build_visible_teleport_particles_texture(source_image: Image) -> ImageTexture:
-	var particle_image := Image.create(
-		source_image.get_width(),
-		source_image.get_height(),
+func _build_visible_teleport_particles_texture(imagen_origen: Image) -> ImageTexture:
+	var imagen_particula := Image.create(
+		imagen_origen.get_width(),
+		imagen_origen.get_height(),
 		false,
 		Image.FORMAT_RGBA8
 	)
 
-	for y in range(source_image.get_height()):
-		for x in range(source_image.get_width()):
-			var source_pixel := source_image.get_pixel(x, y)
-			if source_pixel.a <= 0.0:
+	for y in range(imagen_origen.get_height()):
+		for x in range(imagen_origen.get_width()):
+			var pixel_origen := imagen_origen.get_pixel(x, y)
+			if pixel_origen.a <= 0.0:
 				continue
 
-			var particle_color := teleport_particles_color
-			particle_color.a *= source_pixel.a
-			particle_image.set_pixel(x, y, particle_color)
+			var color_particula := color_particulas_teletransporte
+			color_particula.a *= pixel_origen.a
+			imagen_particula.set_pixel(x, y, color_particula)
 
-	return ImageTexture.create_from_image(particle_image)
+	return ImageTexture.create_from_image(imagen_particula)
 
 
 func _register_grenade_stock_for_achievement() -> void:
-	var scene_root := get_tree().current_scene
-	if scene_root != null and scene_root.has_method("register_grenade_stock"):
-		scene_root.register_grenade_stock(grenade_count)
+	var raiz_escena := get_tree().current_scene
+	if raiz_escena != null and raiz_escena.has_method("register_grenade_stock"):
+		raiz_escena.register_grenade_stock(cantidad_granadas)
 
 
 func _repel_nearby_zombies_with_medkit() -> void:
-	if medkit_repel_radius <= 0.0 or medkit_repel_distance <= 0.0:
+	if radio_repelente_botiquin <= 0.0 or distancia_repelente_botiquin <= 0.0:
 		return
 
 	for zombie in get_tree().get_nodes_in_group("zombies"):
 		if not is_instance_valid(zombie) or not (zombie is Node2D):
 			continue
 
-		var zombie_node := zombie as Node2D
-		var offset := zombie_node.global_position - global_position
-		var distance := offset.length()
-		if distance > medkit_repel_radius:
+		var nodo_zombie := zombie as Node2D
+		var desplazamiento := nodo_zombie.global_position - global_position
+		var distancia := desplazamiento.length()
+		if distancia > radio_repelente_botiquin:
 			continue
 
-		var repel_direction := offset.normalized()
-		if repel_direction == Vector2.ZERO:
-			repel_direction = Vector2.RIGHT.rotated(randf() * TAU)
+		var direccion_repulsion := desplazamiento.normalized()
+		if direccion_repulsion == Vector2.ZERO:
+			direccion_repulsion = Vector2.RIGHT.rotated(randf() * TAU)
 
-		var distance_ratio := 1.0 - (distance / medkit_repel_radius)
-		var repel_strength := medkit_repel_distance * maxf(distance_ratio, 0.35)
-		var repel_offset := repel_direction * repel_strength
-		var zombie_body := zombie_node as CharacterBody2D
-		if zombie_body != null:
-			zombie_body.move_and_collide(repel_offset)
+		var proporcion_distancia := 1.0 - (distancia / radio_repelente_botiquin)
+		var fuerza_repulsion := distancia_repelente_botiquin * maxf(proporcion_distancia, 0.35)
+		var desplazamiento_repulsion := direccion_repulsion * fuerza_repulsion
+		var cuerpo_zombie := nodo_zombie as CharacterBody2D
+		if cuerpo_zombie != null:
+			cuerpo_zombie.move_and_collide(desplazamiento_repulsion)
 		else:
-			zombie_node.global_position += repel_offset
+			nodo_zombie.global_position += desplazamiento_repulsion
 
 
 func die() -> void:
-	if is_dead:
+	if esta_muerto:
 		return
-	if revive_invulnerability_timer > 0.0:
+	if temporizador_invulnerabilidad_revivir > 0.0:
 		return
 
 	_receive_hit()
 
 
 func _receive_hit() -> void:
-	damage_stage += 1
+	fase_dano += 1
 	_play_hit_rumble()
-	if damage_stage >= DEATH_DAMAGE_STAGE:
+	if fase_dano >= DEATH_DAMAGE_STAGE:
 		_die_for_real()
 		return
 
-	revive_invulnerability_timer = revive_invulnerability_duration
+	temporizador_invulnerabilidad_revivir = duracion_invulnerabilidad_revivir
 	_apply_damage_stage_stamina_effect()
 
 
@@ -992,26 +1010,26 @@ func _play_hit_rumble() -> void:
 
 
 func _apply_damage_stage_stamina_effect() -> void:
-	if damage_stage < SECOND_HIT_DAMAGE_STAGE:
+	if fase_dano < SECOND_HIT_DAMAGE_STAGE:
 		return
 
-	var previous_stamina := stamina
-	stamina = minf(stamina, _get_current_stamina_limit())
-	if not is_equal_approx(previous_stamina, stamina):
+	var resistencia_anterior := resistencia
+	resistencia = minf(resistencia, _get_current_stamina_limit())
+	if not is_equal_approx(resistencia_anterior, resistencia):
 		_emit_stamina_changed()
 
 
 func _die_for_real() -> void:
-	is_dead = true
-	damage_stage = DEATH_DAMAGE_STAGE
-	medkit_count = 0
-	grenade_count = 0
-	mine_count = 0
-	teleport_orb_count = 0
-	homing_bullets_timer = 0.0
-	anti_cooldown_timer = 0.0
-	triple_bullet_timer = 0.0
-	medkit_speed_boost_timer = 0.0
+	esta_muerto = true
+	fase_dano = DEATH_DAMAGE_STAGE
+	cantidad_botiquines = 0
+	cantidad_granadas = 0
+	cantidad_minas = 0
+	cantidad_orbes_teletransporte = 0
+	temporizador_balas_teledirigidas = 0.0
+	temporizador_anti_enfriamiento = 0.0
+	temporizador_bala_triple = 0.0
+	temporizador_velocidad_botiquin = 0.0
 	velocity = Vector2.ZERO
 	set_physics_process(false)
 	set_process_input(false)
@@ -1019,10 +1037,10 @@ func _die_for_real() -> void:
 	set_process_unhandled_key_input(false)
 	collision_layer = 0
 	collision_mask = 0
-	animated_sprite.modulate = Color.WHITE
-	emit_signal("medkit_count_changed", medkit_count)
-	emit_signal("grenade_count_changed", grenade_count)
-	emit_signal("mine_count_changed", mine_count)
-	emit_signal("teleport_orb_count_changed", teleport_orb_count)
+	sprite_animado.modulate = Color.WHITE
+	emit_signal("medkit_count_changed", cantidad_botiquines)
+	emit_signal("grenade_count_changed", cantidad_granadas)
+	emit_signal("mine_count_changed", cantidad_minas)
+	emit_signal("teleport_orb_count_changed", cantidad_orbes_teletransporte)
 	_ensure_selected_power_up()
 	emit_signal("died")
