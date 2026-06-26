@@ -1,7 +1,7 @@
 extends Zombie
 
 ## Miner zombie: burrows underground, relocates near the player, then surfaces
-## dizzy and vulnerable for a short window before burrowing again.
+
 
 @export var burrow_sprite_scale: float = 0.3
 @export var burrow_sprite_offset: Vector2 = Vector2(0, 14)
